@@ -22,10 +22,6 @@
 %%    inside a string are silently accepted unchanged
 %%  - any character =<32 is considered whitespace
 %%  - leading zeros for numbers are accepted
-%%
-%% I'm also relying on list_to_integer and list_to_float, so the
-%% parser accepts Erlang syntax for numbers, which is possibly more
-%% lenient than strict JSON syntax for numbers.
 
 -module(rfc4627).
 
@@ -190,8 +186,6 @@ digit_hex($d) -> 13;
 digit_hex($e) -> 14;
 digit_hex($f) -> 15.
 
-finish_number([], _Rest) ->
-    exit(syntax_error);
 finish_number(Acc, Rest) ->
     Str = lists:reverse(Acc),
     {case catch list_to_integer(Str) of
@@ -199,30 +193,64 @@ finish_number(Acc, Rest) ->
 	 Value -> Value
      end, Rest}.
 
-parse_number([], Acc) ->
-    finish_number(Acc, []);
-parse_number([Ch | Rest], Acc) ->
-    case is_legal_number_char(Ch) of
-	true -> parse_number(Rest, [Ch | Acc]);
-	false -> finish_number(Acc, [Ch | Rest])
+parse_number([], _Acc) ->
+    exit(syntax_error);
+parse_number([$- | Rest], Acc) ->
+    parse_number1(Rest, [$- | Acc]);
+parse_number(Rest, Acc) ->
+    parse_number1(Rest, Acc).
+
+parse_number1(Rest, Acc) ->
+    {Acc1, Rest1} = parse_int_part(Rest, Acc),
+    case Rest1 of
+	[] -> finish_number(Acc1, []);
+	[$. | More] ->
+            {Acc2, Rest2} = parse_int_part(More, [$. | Acc1]),
+            parse_exp(Rest2, Acc2);
+        _ ->
+            parse_exp(Rest1, [$0, $. | Acc1])
     end.
 
-is_legal_number_char($0) -> true;
-is_legal_number_char($1) -> true;
-is_legal_number_char($2) -> true;
-is_legal_number_char($3) -> true;
-is_legal_number_char($4) -> true;
-is_legal_number_char($5) -> true;
-is_legal_number_char($6) -> true;
-is_legal_number_char($7) -> true;
-is_legal_number_char($8) -> true;
-is_legal_number_char($9) -> true;
-is_legal_number_char($.) -> true;
-is_legal_number_char($e) -> true;
-is_legal_number_char($E) -> true;
-is_legal_number_char($-) -> true;
-is_legal_number_char($+) -> true;
-is_legal_number_char(_) -> false.
+parse_int_part(Chars = [_Ch | _Rest], Acc) ->
+    parse_int_part0(Chars, Acc).
+
+parse_int_part0([], Acc) ->
+    {Acc, []};
+parse_int_part0([Ch | Rest], Acc) ->
+    case is_digit(Ch) of
+	true -> parse_int_part0(Rest, [Ch | Acc]);
+	false -> {Acc, [Ch | Rest]}
+    end.
+
+parse_exp([$e | Rest], Acc) ->
+    parse_exp1(Rest, Acc);
+parse_exp([$E | Rest], Acc) ->
+    parse_exp1(Rest, Acc);
+parse_exp(Rest, Acc) ->
+    finish_number(Acc, Rest).
+
+parse_exp1(Rest, Acc) ->
+    {Acc1, Rest1} = parse_signed_int_part(Rest, [$e | Acc]),
+    finish_number(Acc1, Rest1).
+
+parse_signed_int_part([$+ | Rest], Acc) ->
+    parse_int_part(Rest, [$+ | Acc]);
+parse_signed_int_part([$- | Rest], Acc) ->
+    parse_int_part(Rest, [$- | Acc]);
+parse_signed_int_part(Rest, Acc) ->
+    parse_int_part(Rest, Acc).
+
+is_digit($0) -> true;
+is_digit($1) -> true;
+is_digit($2) -> true;
+is_digit($3) -> true;
+is_digit($4) -> true;
+is_digit($5) -> true;
+is_digit($6) -> true;
+is_digit($7) -> true;
+is_digit($8) -> true;
+is_digit($9) -> true;
+is_digit(_) -> false.
 
 parse_object([$} | Rest], Acc) ->
     {{obj, lists:reverse(Acc)}, Rest};

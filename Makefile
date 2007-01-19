@@ -29,4 +29,4 @@ debian-package: clean
 	mkdir build
 	cd build; tar -xf ../debian-package.tar
 	cd build; dpkg-buildpackage -rfakeroot -us -uc
-	rm -rf build
+	rm -rf build debian-package.tar

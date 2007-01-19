@@ -24,5 +24,9 @@ distclean: clean
 	rm -rf $(DIST_DIR)
 	find . -name '*~' -exec rm {} \;
 
-package: clean
-	dpkg-buildpackage -rfakeroot
+debian-package: clean
+	tar -cf debian-package.tar .
+	mkdir build
+	cd build; tar -xf ../debian-package.tar
+	cd build; dpkg-buildpackage -rfakeroot -us -uc
+	rm -rf build

@@ -206,9 +206,9 @@ parse_number1(Rest, Acc) ->
 	[] -> finish_number(Acc1, []);
 	[$. | More] ->
             {Acc2, Rest2} = parse_int_part(More, [$. | Acc1]),
-            parse_exp(Rest2, Acc2);
+            parse_exp(Rest2, Acc2, false);
         _ ->
-            parse_exp(Rest1, [$0, $. | Acc1])
+            parse_exp(Rest1, Acc1, true)
     end.
 
 parse_int_part(Chars = [_Ch | _Rest], Acc) ->
@@ -222,15 +222,18 @@ parse_int_part0([Ch | Rest], Acc) ->
 	false -> {Acc, [Ch | Rest]}
     end.
 
-parse_exp([$e | Rest], Acc) ->
-    parse_exp1(Rest, Acc);
-parse_exp([$E | Rest], Acc) ->
-    parse_exp1(Rest, Acc);
-parse_exp(Rest, Acc) ->
+parse_exp([$e | Rest], Acc, NeedFrac) ->
+    parse_exp1(Rest, Acc, NeedFrac);
+parse_exp([$E | Rest], Acc, NeedFrac) ->
+    parse_exp1(Rest, Acc, NeedFrac);
+parse_exp(Rest, Acc, _NeedFrac) ->
     finish_number(Acc, Rest).
 
-parse_exp1(Rest, Acc) ->
-    {Acc1, Rest1} = parse_signed_int_part(Rest, [$e | Acc]),
+parse_exp1(Rest, Acc, NeedFrac) ->
+    {Acc1, Rest1} = parse_signed_int_part(Rest, if
+						    NeedFrac -> [$e, $0, $. | Acc];
+						    true -> [$e | Acc]
+						end),
     finish_number(Acc1, Rest1).
 
 parse_signed_int_part([$+ | Rest], Acc) ->

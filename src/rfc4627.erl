@@ -2,6 +2,11 @@
 %% Copyright (c) 2007 Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
 %% Copyright (c) 2007 LShift Ltd. <query@lshift.net>
 %%
+%% encode(val()) -> str()
+%% decode(str()) -> {ok, val(), str()} | {error, Reason}
+%%                  where Reason is usually far too much information
+%%                  and should be ignored.
+%%
 %% Data type mapping as per Joe Armstrong's message
 %% http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html:
 %%
@@ -122,6 +127,8 @@ encode_number(Num, Acc) when is_float(Num) ->
 decode(Chars) ->
     case catch parse(skipws(Chars)) of
 	{'EXIT', Reason} ->
+	    %% Reason is usually far too much information, but helps
+	    %% if needing to debug this module.
 	    {error, Reason};
 	{Value, Remaining} ->
 	    {ok, Value, skipws(Remaining)}

@@ -26,6 +26,7 @@
 -module(rfc4627).
 
 -export([mime_type/0, encode/1, encode/2, decode/1]).
+-export([from_record/3, to_record/3]).
 
 mime_type() ->
     "application/json".
@@ -272,3 +273,22 @@ parse_array([$, | Rest], Acc) ->
 parse_array(Chars, Acc) ->
     {Value, Rest} = parse(Chars),
     parse_array(skipws(Rest), [Value | Acc]).
+
+from_record(R, _RName, Fields) ->
+    {obj, encode_record_fields(R, 2, Fields)}.
+
+encode_record_fields(_R, _Index, []) ->
+    [];
+encode_record_fields(R, Index, [Field | Rest]) ->
+    [{atom_to_list(Field), element(Index, R)} | encode_record_fields(R, Index + 1, Rest)].
+
+to_record({obj, Values}, RName, Fields) ->
+    list_to_tuple([RName
+		   | lists:map(fun (Field) ->
+				       case lists:keysearch(atom_to_list(Field), 1, Values) of
+					   {value, {_, Value}} ->
+					       Value;
+					   false ->
+					       undefined
+				       end
+			       end, Fields)]).

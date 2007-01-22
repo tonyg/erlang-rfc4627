@@ -3,7 +3,7 @@
 
 -export([test_all/0]).
 
--record(address, {number, street, town}).
+-record(address, {number, street, town, country = <<"England">>}).
 
 test_all() ->
     passed = test_codec(),
@@ -44,7 +44,10 @@ test_records() ->
     A = #address{number = 6, street = <<"Rufus Street">>, town = <<"London">>},
     AEnc = {obj, [{"number", 6},
 		  {"street", <<"Rufus Street">>},
-		  {"town", <<"London">>}]} = ?RFC4627_FROM_RECORD(address, A),
-    A = ?RFC4627_TO_RECORD(address, AEnc),
+		  {"town", <<"London">>},
+		  {"country", <<"England">>}]} = ?RFC4627_FROM_RECORD(address, A),
+    A = ?RFC4627_TO_RECORD(address, {obj, [{"number", 6},
+					   {"street", <<"Rufus Street">>},
+					   {"town", <<"London">>}]}),
     {ok, AEnc, []} = rfc4627:decode(rfc4627:encode(AEnc)),
     passed.

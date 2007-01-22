@@ -30,3 +30,6 @@ debian-package: clean
 	cd build; tar -xf ../debian-package.tar
 	cd build; dpkg-buildpackage -rfakeroot -us -uc
 	rm -rf build debian-package.tar
+
+test-compile:
+	erlc $(ERLC_OPTS) $(wildcard test/*.erl)

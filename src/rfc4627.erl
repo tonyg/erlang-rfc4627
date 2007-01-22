@@ -287,15 +287,22 @@ from_record(R, _RName, Fields) ->
 encode_record_fields(_R, _Index, []) ->
     [];
 encode_record_fields(R, Index, [Field | Rest]) ->
-    [{atom_to_list(Field), element(Index, R)} | encode_record_fields(R, Index + 1, Rest)].
+    case element(Index, R) of
+	undefined ->
+	    encode_record_fields(R, Index + 1, Rest);
+	Value ->
+	    [{atom_to_list(Field), Value} | encode_record_fields(R, Index + 1, Rest)]
+    end.
 
-to_record({obj, Values}, RName, Fields) ->
-    list_to_tuple([RName
-		   | lists:map(fun (Field) ->
-				       case lists:keysearch(atom_to_list(Field), 1, Values) of
-					   {value, {_, Value}} ->
-					       Value;
-					   false ->
-					       undefined
-				       end
-			       end, Fields)]).
+to_record({obj, Values}, Fallback, Fields) ->
+    list_to_tuple([element(1, Fallback) | decode_record_fields(Values, Fallback, 2, Fields)]).
+
+decode_record_fields(_Values, _Fallback, _Index, []) ->
+    [];
+decode_record_fields(Values, Fallback, Index, [Field | Rest]) ->
+    [case lists:keysearch(atom_to_list(Field), 1, Values) of
+	 {value, {_, Value}} ->
+	     Value;
+	 false ->
+	     element(Index, Fallback)
+     end | decode_record_fields(Values, Fallback, Index + 1, Rest)].

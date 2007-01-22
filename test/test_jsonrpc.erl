@@ -13,7 +13,8 @@ start() ->
     mod_jsonrpc:register_service
       (Pid,
        #service{name = <<"test">>,
-		id = <<"urn:dummy:id">>,
+		id = <<"urn:uuid:afe1b4b5-23b0-4964-a74a-9168535c96b2">>,
+		version = <<"1.0">>,
 		procs = [#service_proc{name = <<"test_proc">>,
 				       idempotent = true,
 				       params = [#service_proc_param{name = <<"value">>,

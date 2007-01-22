@@ -1,7 +1,7 @@
 -module(test_jsonrpc).
 
 -include("rfc4627.hrl").
--include("rfc4627_jsonrpc.hrl").
+-include("mod_jsonrpc.hrl").
 
 -behaviour(gen_server).
 
@@ -10,7 +10,7 @@
 
 start() ->
     {ok, Pid} = gen_server:start(?MODULE, [], []),
-    rfc4627_jsonrpc:register_service
+    mod_jsonrpc:register_service
       (Pid,
        #service{name = <<"test">>,
 		id = <<"urn:dummy:id">>,
@@ -21,7 +21,7 @@ start() ->
 
 start_httpd() ->
     httpd:start("test/server_root/conf/httpd.conf"),
-    rfc4627_jsonrpc:start(),
+    mod_jsonrpc:start(),
     start().
 
 %---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     State.
 
-handle_call({jsonrpc, <<"">>, _Env, [Value]}, _From, State) ->
+handle_call({jsonrpc, <<"test_proc">>, _ModData, [Value]}, _From, State) ->
     {reply, {result, <<"ErlangServer: ", Value/binary>>}, State}.
 
 handle_cast(Request, State) ->

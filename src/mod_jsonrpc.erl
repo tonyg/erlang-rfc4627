@@ -254,14 +254,26 @@ run_handler({function, F}, Name, ModData, CoercedArgs) ->
 coerce_args(_Params, Args) when is_list(Args) ->
     Args;
 coerce_args(Params, {obj, Fields}) ->
-    lists:map(fun (#service_proc_param{name = Name}) ->
+    lists:map(fun (#service_proc_param{name = Name, type = Type}) ->
 		      case lists:keysearch(binary_to_list(Name), 1, Fields) of
 			  {value, {_, Value}} ->
-			      Value;
+			      coerce_value(Value, Type);
 			  false ->
 			      null
 		      end
 	      end, Params).
+
+coerce_value(Value, _Type) when not(is_binary(Value)) ->
+    Value;
+coerce_value(<<"true">>, <<"bit">>) -> true;
+coerce_value(_, <<"bit">>) -> false;
+coerce_value(V, <<"num">>) -> list_to_integer(binary_to_list(V));
+coerce_value(V, <<"str">>) -> V;
+coerce_value(V, <<"arr">>) -> rfc4627:decode(V);
+coerce_value(V, <<"obj">>) -> rfc4627:decode(V);
+coerce_value(V, <<"any">>) -> rfc4627:decode(V);
+coerce_value(_, <<"nil">>) -> null;
+coerce_value(V, _) -> V.
 
 remove_undefined({obj, Fields}) ->
     {obj, remove_undefined1(Fields)}.

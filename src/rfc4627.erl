@@ -166,6 +166,7 @@ parse_general_char($t, Rest, Acc) -> parse_string(Rest, [9 | Acc]);
 parse_general_char($n, Rest, Acc) -> parse_string(Rest, [10 | Acc]);
 parse_general_char($f, Rest, Acc) -> parse_string(Rest, [12 | Acc]);
 parse_general_char($r, Rest, Acc) -> parse_string(Rest, [13 | Acc]);
+parse_general_char($/, Rest, Acc) -> parse_string(Rest, [$/ | Acc]);
 parse_general_char($\\, Rest, Acc) -> parse_string(Rest, [$\\ | Acc]);
 parse_general_char($", Rest, Acc) -> parse_string(Rest, [$" | Acc]);
 parse_general_char($u, [D0, D1, D2, D3 | Rest], Acc) ->

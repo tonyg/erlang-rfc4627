@@ -8,9 +8,9 @@
 -export([start/0]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
--export([register_service/2, error_response/2, error_response/3, service/4, proc/2]).
+-export([register_service/2, error_response/2, error_response/3, service/4, service/5, proc/2]).
 -export([gen_object_name/0, service_address/2, system_describe/2]).
--export([invoke_service_method/5]).
+-export([jsonrpc_post/3, invoke_service_method/5]).
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
@@ -27,6 +27,19 @@ do(ModData = #mod{data = OldData}) ->
 load("JsonRpcAlias " ++ Alias, []) ->
     {ok, [], {json_rpc_alias, Alias}}.
 
+jsonrpc_post(ServiceRec, ModData, {obj, Fields}) ->
+    Id = httpd_util:key1search(Fields, "id"),
+    Method = httpd_util:key1search(Fields, "method"),
+    Args = httpd_util:key1search(Fields, "params"),
+    {Headers, ResultField} =
+	expand_jsonrpc_reply(invoke_service_method(ServiceRec, post, ModData, Method, Args)),
+    {Headers, build_jsonrpc_response(Id, ResultField)}.
+
+build_jsonrpc_response(Id, ResultField) ->
+    {obj, [{version, <<"1.1">>},
+	   {id, Id},
+	   ResultField]}.
+
 do_rpc(ModData = #mod{data = OldData}) ->
     case extract_object_method_and_params(ModData) of
 	no_match ->
@@ -41,9 +54,7 @@ do_rpc(ModData = #mod{data = OldData}) ->
 		      ServiceRec ->
 			  invoke_service_method(ServiceRec, PostOrGet, ModData, Method, Args)
 		  end),
-	    Result = {obj, [{version, <<"1.1">>},
-			    {id, Id},
-			    ResultField]},
+	    Result = build_jsonrpc_response(Id, ResultField),
 	    ResultEnc = lists:flatten(rfc4627:encode(Result)),
 	    {proceed, [{response, {response,
 				   [{code, 200},
@@ -93,6 +104,9 @@ error_response(Code, Message, ErrorValue) ->
 		   {"code", Code},
 		   {"message", Message},
 		   {"error", ErrorValue}]}}.
+
+service(Handler, Name, Id, Version, Procs) ->
+    (service(Name, Id, Version, Procs))#service{handler = Handler}.
 
 service(Name, Id, Version, Procs) when is_list(Name) ->
     service(list_to_binary(Name), Id, Version, Procs);
@@ -155,7 +169,9 @@ service_address(#mod{socket_type = SocketType,
 		 ssl -> "https:";
 		 _Other -> ""
 	     end,
-    Scheme ++ Host ++ AliasPrefix ++ "/" ++ Object.
+    Scheme ++ Host ++ AliasPrefix ++ "/" ++ Object;
+service_address(_, Object) ->
+    Object.
 
 extract_object_method_and_params(#mod{config_db = ConfigDb, request_uri = Uri}) ->
     AliasPrefix = httpd_util:lookup(ConfigDb, json_rpc_alias, "/jsonrpc"),

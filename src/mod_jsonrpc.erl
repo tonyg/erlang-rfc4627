@@ -271,7 +271,7 @@ coerce_value(V, <<"num">>) -> list_to_integer(binary_to_list(V));
 coerce_value(V, <<"str">>) -> V;
 coerce_value(V, <<"arr">>) -> rfc4627:decode(V);
 coerce_value(V, <<"obj">>) -> rfc4627:decode(V);
-coerce_value(V, <<"any">>) -> rfc4627:decode(V);
+coerce_value(V, <<"any">>) -> V;
 coerce_value(_, <<"nil">>) -> null;
 coerce_value(V, _) -> V.
 

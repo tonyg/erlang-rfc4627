@@ -8,7 +8,8 @@
 -export([start/0]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
--export([register_service/2, error_response/2, error_response/3]).
+-export([register_service/2, error_response/2, error_response/3, proc/2]).
+-export([gen_object_name/0, service_address/2]).
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
@@ -32,13 +33,13 @@ do_rpc(ModData = #mod{data = OldData}) ->
 	UriInfo = {_Object, _UriMethod, _UriParamStr} ->
 	    {PostOrGet, Id, Service, Method, Args} = parse_jsonrpc(ModData, UriInfo),
 	    {Headers, ResultField} =
-		case gen_server:call(mod_jsonrpc,
-				     {rpc, PostOrGet, ModData, Service, Method, Args}) of
-		    {result, Value} -> {[], {result, Value}};
-		    {error, Value} -> {[], {error, Value}};
-		    {result, Value, Headers0} -> {Headers0, {result, Value}};
-		    {error, Value, Headers0} -> {Headers0, {error, Value}}
-		end,
+		expand_jsonrpc_reply(
+		  case gen_server:call(mod_jsonrpc, {lookup_service, Service}) of
+		      not_found ->
+			  error_response(404, "Service not found", Service);
+		      ServiceRec ->
+			  invoke_service_method(ServiceRec, PostOrGet, ModData, Method, Args)
+		  end),
 	    Result = {obj, [{version, <<"1.1">>},
 			    {id, Id},
 			    ResultField]},
@@ -50,6 +51,27 @@ do_rpc(ModData = #mod{data = OldData}) ->
 				    | Headers],
 				   ResultEnc}} | OldData]}
     end.
+
+invoke_service_method(ServiceRec = #service{name = ServiceName},
+		      PostOrGet, ModData, Method, Args) ->
+    case Method of
+	<<"system.describe">> ->
+	    system_describe(service_address(ModData, ServiceName), ServiceRec);
+	<<"system.", _Rest/binary>> ->
+	    error_response(403, "System methods forbidden", Method);
+	_ ->
+	    case lookup_service_proc(ServiceRec, Method) of
+		{ok, ServiceProc} ->
+		    invoke_service(PostOrGet, ServiceRec#service.pid, ModData, ServiceProc, Args);
+		not_found ->
+		    error_response(404, "Procedure not found", [ServiceName, Method])
+	    end
+    end.
+
+expand_jsonrpc_reply(Reply = {result, _Value}) -> {[], Reply};
+expand_jsonrpc_reply(Reply = {error, _Value}) -> {[], Reply};
+expand_jsonrpc_reply({result, Value, Headers0}) -> {Headers0, {result, Value}};
+expand_jsonrpc_reply({error, Value, Headers0}) -> {Headers0, {error, Value}}.
 
 register_service(Pid, ServiceDescription) ->
     gen_server:call(mod_jsonrpc, {register_service, Pid, ServiceDescription}).
@@ -69,7 +91,52 @@ error_response(Code, Message, ErrorValue) ->
 		   {"message", Message},
 		   {"error", ErrorValue}]}}.
 
-%---------------------------------------------------------------------------
+proc(Name, Params) ->
+    #service_proc{name = Name, params = lists:map(fun proc_param/1, Params)}.
+
+proc_param({N, T}) when is_list(N) ->
+    proc_param({list_to_binary(N), T});
+proc_param({N, T}) ->
+    #service_proc_param{name = N, type = proc_param_type(T)}.
+
+proc_param_type(bit) -> <<"bit">>;
+proc_param_type(num) -> <<"num">>;
+proc_param_type(str) -> <<"str">>;
+proc_param_type(arr) -> <<"arr">>;
+proc_param_type(obj) -> <<"obj">>;
+proc_param_type(any) -> <<"any">>;
+proc_param_type(nil) -> <<"nil">>;
+proc_param_type(T) when is_list(T) -> list_to_binary(T);
+proc_param_type(T) when is_binary(T) -> T.
+
+gen_object_name() ->
+    Hash = erlang:md5(term_to_binary({node(), erlang:now()})),
+    binary_to_hex(Hash).
+
+binary_to_hex(<<>>) ->
+    [];
+binary_to_hex(<<B, Rest/binary>>) ->
+    [rfc4627:hex_digit((B bsr 4) band 15),
+     rfc4627:hex_digit(B band 15) |
+     binary_to_hex(Rest)].
+
+service_address(ModData, Object) when is_binary(Object) ->
+    service_address(ModData, binary_to_list(Object));
+service_address(#mod{socket_type = SocketType,
+		     config_db = ConfigDb,
+		     parsed_header = Headers},
+		Object) ->
+    AliasPrefix = httpd_util:lookup(ConfigDb, json_rpc_alias, "/jsonrpc"),
+    Host = case httpd_util:key1search(Headers, "host") of
+	       undefined -> "";
+	       Name -> "//" ++ Name
+	   end,
+    Scheme = case SocketType of
+		 ip_comm -> "http:";
+		 ssl -> "https:";
+		 _Other -> ""
+	     end,
+    Scheme ++ Host ++ AliasPrefix ++ "/" ++ Object.
 
 extract_object_method_and_params(#mod{config_db = ConfigDb, request_uri = Uri}) ->
     AliasPrefix = httpd_util:lookup(ConfigDb, json_rpc_alias, "/jsonrpc"),
@@ -123,17 +190,18 @@ lookup_service_proc(#service{procs = Procs}, Method) ->
 	    not_found
     end.
 
-do_rpc(get, Pid, ModData, ServiceProc, Args) ->
+invoke_service(get, Pid, ModData, ServiceProc, Args) ->
     if
 	ServiceProc#service_proc.idempotent ->
-	    do_rpc1(Pid, ModData, ServiceProc, Args);
+	    invoke_service1(Pid, ModData, ServiceProc, Args);
 	true ->
 	    error_response(403, "Non-idempotent method", ServiceProc#service_proc.name)
     end;
-do_rpc(post, Pid, ModData, ServiceProc, Args) ->
-    do_rpc1(Pid, ModData, ServiceProc, Args).
+invoke_service(post, Pid, ModData, ServiceProc, Args) ->
+    invoke_service1(Pid, ModData, ServiceProc, Args).
 
-do_rpc1(Pid, ModData, #service_proc{name = Name, params = Params}, Args) ->
+invoke_service1(Pid, ModData, #service_proc{name = Name, params = Params}, Args) ->
+    %%error_logger:info_msg("JSONRPC invoking ~p:~p(~p)", [Pid, Name, Args]),
     case catch gen_server:call(Pid, {jsonrpc, Name, ModData, coerce_args(Params, Args)}) of
 	{'EXIT', {{function_clause, _}, _}} ->
 	    error_response(404, "Undefined procedure", Name);
@@ -186,12 +254,6 @@ system_describe_proc(P = #service_proc{params = Params}) ->
 system_describe_proc_param(P = #service_proc_param{}) ->
     remove_undefined(?RFC4627_FROM_RECORD(service_proc_param, P)).
 
-compute_script_url(#mod{request_uri = Uri}) ->
-    case string:tokens(Uri, "?") of
-	[] -> "";
-	[Prefix | _Rest] -> Prefix
-    end.
-
 %---------------------------------------------------------------------------
 
 init(_Args) ->
@@ -204,28 +266,12 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     State.
 
-handle_call({rpc, PostOrGet, ModData, Service, Method, Args}, _From, State) ->
+handle_call({lookup_service, Service}, _From, State) ->
     case get({service, Service}) of
 	undefined ->
-	    {reply, error_response(404, "Service not found", Service), State};
+	    {reply, not_found, State};
 	ServiceRec ->
-	    case Method of
-		<<"system.describe">> ->
-		    {reply, system_describe(compute_script_url(ModData), ServiceRec), State};
-		<<"system.", _Rest/binary>> ->
-		    {reply, error_response(403, "System methods forbidden", Method), State};
-		_ ->
-		    case lookup_service_proc(ServiceRec, Method) of
-			{ok, ServiceProc} ->
-			    {reply,
-			     do_rpc(PostOrGet, ServiceRec#service.pid, ModData, ServiceProc, Args),
-			     State};
-			not_found ->
-			    {reply,
-			     error_response(404, "Procedure not found", [Service, Method]),
-			     State}
-		    end
-	    end
+	    {reply, ServiceRec, State}
     end;
 
 handle_call({register_service, Pid, ServiceDescription}, _From, State) ->

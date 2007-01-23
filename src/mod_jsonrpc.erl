@@ -8,7 +8,7 @@
 -export([start/0]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
--export([register_service/2, error_response/2, error_response/3, proc/2]).
+-export([register_service/2, error_response/2, error_response/3, service/4, proc/2]).
 -export([gen_object_name/0, service_address/2]).
 
 start() ->
@@ -74,6 +74,7 @@ expand_jsonrpc_reply({result, Value, Headers0}) -> {Headers0, {result, Value}};
 expand_jsonrpc_reply({error, Value, Headers0}) -> {Headers0, {error, Value}}.
 
 register_service(Pid, ServiceDescription) ->
+    %%error_logger:info_msg("Registering ~p as ~p", [Pid, ServiceDescription]),
     gen_server:call(mod_jsonrpc, {register_service, Pid, ServiceDescription}).
 
 error_response(Code, ErrorValue) when is_integer(Code) ->
@@ -91,6 +92,22 @@ error_response(Code, Message, ErrorValue) ->
 		   {"message", Message},
 		   {"error", ErrorValue}]}}.
 
+service(Name, Id, Version, Procs) when is_list(Name) ->
+    service(list_to_binary(Name), Id, Version, Procs);
+service(Name, Id, Version, Procs) when is_list(Id) ->
+    service(Name, list_to_binary(Id), Version, Procs);
+service(Name, Id, Version, Procs) when is_list(Version) ->
+    service(Name, Id, list_to_binary(Version), Procs);
+service(Name, Id, Version, Procs) ->
+    #service{name = Name, id = Id, version = Version,
+	     procs = lists:map(fun ({ProcName, Params}) ->
+				       proc(ProcName, Params);
+				   (P = #service_proc{}) ->
+				       P
+			       end, Procs)}.
+
+proc(Name, Params) when is_list(Name) ->
+    proc(list_to_binary(Name), Params);
 proc(Name, Params) ->
     #service_proc{name = Name, params = lists:map(fun proc_param/1, Params)}.
 

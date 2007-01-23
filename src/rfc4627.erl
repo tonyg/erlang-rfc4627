@@ -32,6 +32,7 @@
 
 -export([mime_type/0, encode/1, encode/2, decode/1]).
 -export([from_record/3, to_record/3]).
+-export([hex_digit/1, digit_hex/1]).
 
 mime_type() ->
     "application/json".

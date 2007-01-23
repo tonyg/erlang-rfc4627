@@ -42,6 +42,8 @@ encode(X) ->
 
 encode(Str, Acc) when is_binary(Str) ->
     quote_and_encode_string(binary_to_list(Str), Acc);
+encode(Str, Acc) when is_atom(Str) ->
+    quote_and_encode_string(atom_to_list(Str), Acc);
 encode(Num, Acc) when is_number(Num) ->
     encode_number(Num, Acc);
 encode(true, Acc) ->

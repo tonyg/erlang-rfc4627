@@ -4,6 +4,6 @@
 %%
 %% Records for JSON-RPC inets services using the rfc4627_jsonrpc module.
 
--record(service, {pid, name, id, version, summary, help, procs}).
+-record(service, {handler, name, id, version, summary, help, procs}).
 -record(service_proc, {name, summary, help, idempotent = false, params, return}).
 -record(service_proc_param, {name, type}).

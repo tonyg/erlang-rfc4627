@@ -10,6 +10,7 @@
 -export([do/1, load/2]).
 -export([register_service/2, error_response/2, error_response/3, service/4, proc/2]).
 -export([gen_object_name/0, service_address/2, system_describe/2]).
+-export([invoke_service_method/5]).
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
@@ -62,7 +63,8 @@ invoke_service_method(ServiceRec = #service{name = ServiceName},
 	_ ->
 	    case lookup_service_proc(ServiceRec, Method) of
 		{ok, ServiceProc} ->
-		    invoke_service(PostOrGet, ServiceRec#service.pid, ModData, ServiceProc, Args);
+		    invoke_service(PostOrGet, ServiceRec#service.handler,
+				   ModData, ServiceProc, Args);
 		not_found ->
 		    error_response(404, "Procedure not found", [ServiceName, Method])
 	    end
@@ -207,19 +209,19 @@ lookup_service_proc(#service{procs = Procs}, Method) ->
 	    not_found
     end.
 
-invoke_service(get, Pid, ModData, ServiceProc, Args) ->
+invoke_service(get, Handler, ModData, ServiceProc, Args) ->
     if
 	ServiceProc#service_proc.idempotent ->
-	    invoke_service1(Pid, ModData, ServiceProc, Args);
+	    invoke_service1(Handler, ModData, ServiceProc, Args);
 	true ->
 	    error_response(403, "Non-idempotent method", ServiceProc#service_proc.name)
     end;
-invoke_service(post, Pid, ModData, ServiceProc, Args) ->
-    invoke_service1(Pid, ModData, ServiceProc, Args).
+invoke_service(post, Handler, ModData, ServiceProc, Args) ->
+    invoke_service1(Handler, ModData, ServiceProc, Args).
 
-invoke_service1(Pid, ModData, #service_proc{name = Name, params = Params}, Args) ->
-    %%error_logger:info_msg("JSONRPC invoking ~p:~p(~p)", [Pid, Name, Args]),
-    case catch gen_server:call(Pid, {jsonrpc, Name, ModData, coerce_args(Params, Args)}) of
+invoke_service1(Handler, ModData, #service_proc{name = Name, params = Params}, Args) ->
+    %%error_logger:info_msg("JSONRPC invoking ~p:~p(~p)", [Handler, Name, Args]),
+    case catch run_handler(Handler, Name, ModData, coerce_args(Params, Args)) of
 	{'EXIT', {{function_clause, _}, _}} ->
 	    error_response(404, "Undefined procedure", Name);
 	{'EXIT', Reason} ->
@@ -227,6 +229,11 @@ invoke_service1(Pid, ModData, #service_proc{name = Name, params = Params}, Args)
 	Response ->
 	    Response
     end.
+
+run_handler({pid, Pid}, Name, ModData, CoercedArgs) ->
+    gen_server:call(Pid, {jsonrpc, Name, ModData, CoercedArgs});
+run_handler({function, F}, Name, ModData, CoercedArgs) ->
+    F(Name, ModData, CoercedArgs).
 
 coerce_args(_Params, Args) when is_list(Args) ->
     Args;
@@ -292,7 +299,7 @@ handle_call({lookup_service, Service}, _From, State) ->
     end;
 
 handle_call({register_service, Pid, ServiceDescription}, _From, State) ->
-    SD = ServiceDescription#service{pid = Pid},
+    SD = ServiceDescription#service{handler = {pid, Pid}},
     erlang:monitor(process, Pid),
     put({service_pid, Pid}, SD#service.name),
     put({service, SD#service.name}, SD),

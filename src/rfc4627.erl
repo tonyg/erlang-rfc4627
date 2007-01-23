@@ -127,6 +127,8 @@ encode_number(Num, Acc) when is_integer(Num) ->
 encode_number(Num, Acc) when is_float(Num) ->
     lists:reverse(float_to_list(Num), Acc).
 
+decode(Bin) when is_binary(Bin) ->
+    decode(binary_to_list(Bin));
 decode(Chars) ->
     case catch parse(skipws(Chars)) of
 	{'EXIT', Reason} ->

@@ -9,7 +9,7 @@
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
 -export([register_service/2, error_response/2, error_response/3, service/4, proc/2]).
--export([gen_object_name/0, service_address/2]).
+-export([gen_object_name/0, service_address/2, system_describe/2]).
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
@@ -56,7 +56,7 @@ invoke_service_method(ServiceRec = #service{name = ServiceName},
 		      PostOrGet, ModData, Method, Args) ->
     case Method of
 	<<"system.describe">> ->
-	    system_describe(service_address(ModData, ServiceName), ServiceRec);
+	    {result, system_describe(service_address(ModData, ServiceName), ServiceRec)};
 	<<"system.", _Rest/binary>> ->
 	    error_response(403, "System methods forbidden", Method);
 	_ ->
@@ -250,17 +250,17 @@ remove_undefined1([{_, undefined} | Rest]) ->
 remove_undefined1([X | Rest]) ->
     [X | remove_undefined1(Rest)].
 
-system_describe(ScriptName,
+system_describe(AddressStr,
 		#service{name = Name, id = Id, version = Version, summary = Summary,
 			 help = Help, procs = Procs}) ->
-    {result, remove_undefined({obj, [{"sdversion", <<"1.0">>},
-				     {"name", Name},
-				     {"id", Id},
-				     {"version", Version},
-				     {"summary", Summary},
-				     {"help", Help},
-				     {"address", list_to_binary(ScriptName)},
-				     {"procs", lists:map(fun system_describe_proc/1, Procs)}]})}.
+    remove_undefined({obj, [{"sdversion", <<"1.0">>},
+			    {"name", Name},
+			    {"id", Id},
+			    {"version", Version},
+			    {"summary", Summary},
+			    {"help", Help},
+			    {"address", list_to_binary(AddressStr)},
+			    {"procs", lists:map(fun system_describe_proc/1, Procs)}]}).
 
 system_describe_proc(P = #service_proc{params = Params}) ->
     remove_undefined(?RFC4627_FROM_RECORD(service_proc,

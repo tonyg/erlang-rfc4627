@@ -25,3 +25,4 @@
 \#
 \.cvsignore$
 \.beam$
+(^|/)test/server_root/logs/

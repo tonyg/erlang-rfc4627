@@ -12,9 +12,11 @@ Object.extend(JsonRpcTransaction.prototype,
 	this.serviceUrl = serviceUrl;
 	this.methodName = methodName;
 	this.params = params;
+	this.error = null;
 	this.reply = null;
 	this.replyReady = 0;
 	this.callbacks = [];
+	this.errorCallbacks = [];
 	this.request =
 	    new Ajax.Request(serviceUrl,
 			     { method: 'post',
@@ -41,19 +43,36 @@ Object.extend(JsonRpcTransaction.prototype,
 		      "Params: " + JSON.stringify(this.params) + "\n" +
 		      "Response: " + JSON.stringify(response) + "\n");
 	    }
-	    throw response.error;
+	    this.error = response.error;
+	    this.errorCallbacks.each(function (cb) {
+					 try { cb(response.error, true); }
+					 catch (err) {}
+				     });
 	} else {
 	    var reply = response.result;
 	    this.reply = reply;
 	    this.replyReady = 1;
-	    this.callbacks.each(function (cb) { cb(reply); });
+	    this.callbacks.each(function (cb) {
+				    try { cb(reply, false); }
+				    catch (err) {}
+				});
 	}
     },
 
     addCallback: function(cb) {
 	this.callbacks.push(cb);
 	if (this.replyReady) {
-	    cb(this.reply);
+	    try { cb(this.reply, false); }
+	    catch (err) {}
+	}
+	return this;
+    },
+
+    addErrorCallback: function(cb) {
+	this.errorCallbacks.push(cb);
+	if (this.error) {
+	    try { cb(this.error, true); }
+	    catch (err) {}
 	}
 	return this;
     }

@@ -40,18 +40,18 @@ mime_type() ->
 encode(X) ->
     lists:reverse(encode(X, [])).
 
-encode(Str, Acc) when is_binary(Str) ->
-    quote_and_encode_string(binary_to_list(Str), Acc);
-encode(Str, Acc) when is_atom(Str) ->
-    quote_and_encode_string(atom_to_list(Str), Acc);
-encode(Num, Acc) when is_number(Num) ->
-    encode_number(Num, Acc);
 encode(true, Acc) ->
     "eurt" ++ Acc;
 encode(false, Acc) ->
     "eslaf" ++ Acc;
 encode(null, Acc) ->
     "llun" ++ Acc;
+encode(Str, Acc) when is_binary(Str) ->
+    quote_and_encode_string(binary_to_list(Str), Acc);
+encode(Str, Acc) when is_atom(Str) ->
+    quote_and_encode_string(atom_to_list(Str), Acc);
+encode(Num, Acc) when is_number(Num) ->
+    encode_number(Num, Acc);
 encode({obj, Fields}, Acc) ->
     "}" ++ encode_object(Fields, "{" ++ Acc);
 encode(Arr, Acc) when is_list(Arr) ->

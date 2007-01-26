@@ -1,6 +1,6 @@
-rfc4627-erlang (0.0-1) unstable; urgency=low
+rfc4627-erlang (1.0-1) unstable; urgency=low
 
   * Initial release
 
- -- Tony Garnock-Jones <tonyg@lshift.net>  Fri, 19 Jan 2007 20:08:56 +0000
+ -- Tony Garnock-Jones <tonyg@lshift.net>  Fri, 26 Jan 2007 14:17:16 +0000
 

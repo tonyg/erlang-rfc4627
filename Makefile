@@ -27,7 +27,7 @@ debian-package: clean
 	tar -cf debian-package.tar .
 	mkdir build
 	cd build; tar -xf ../debian-package.tar
-	cd build; dpkg-buildpackage -rfakeroot -us -uc
+	cd build; dpkg-buildpackage -rfakeroot
 	rm -rf build debian-package.tar
 
 test-compile:

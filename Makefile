@@ -1,4 +1,3 @@
-VERSION=0.0
 SOURCE_DIR=src
 EBIN_DIR=ebin
 INCLUDE_DIR=include

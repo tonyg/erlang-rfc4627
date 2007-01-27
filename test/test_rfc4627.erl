@@ -1,5 +1,5 @@
 -module(test_rfc4627).
--include_lib("rfc4627/include/rfc4627.hrl").
+-include("rfc4627.hrl").
 
 -export([test_all/0]).
 

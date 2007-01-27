@@ -5,7 +5,6 @@ Object.extend(JsonRpcTransaction.prototype,
 {
     initialize: function(serviceUrl, methodName, params, options) {
 	this.options = {
-	    asynchronous: true,
 	    debug: false
 	};
 	Object.extend(this.options, options || {});
@@ -34,11 +33,7 @@ Object.extend(JsonRpcTransaction.prototype,
 			       requestHeaders: ['Content-type', 'application/json',
 						'Accept', 'application/json'],
 			       postBody: JSON.stringify(this.buildRequest()),
-			       asynchronous: this.options.asynchronous,
 			       onComplete: this.receiveReply.bind(this) });
-	if (!this.options.asynchronous) {
-	    this.receiveReply(this.request.transport);
-	}
     },
 
     receiveReply: function(ajaxRequest) {
@@ -89,27 +84,28 @@ Object.extend(JsonRpcTransaction.prototype,
 JsonRpcService = Class.create();
 Object.extend(JsonRpcService.prototype,
 {
-    initialize: function(serviceUrl, options) {
+    initialize: function(serviceUrl, onReady, options) {
 	this.options = {
 	    transactionClass: JsonRpcTransaction,
 	    debug: false
 	};
 	Object.extend(this.options, options || {});
 	this.serviceUrl = serviceUrl;
+	var svc = this;
 	var txn = new (this.options.transactionClass)(serviceUrl,
 						      "system.describe",
 						      [],
-						      {asynchronous: false,
-						       debug: this.options.debug});
-	this.serviceDescription = txn.reply;
-	var svc = this;
-	this.serviceDescription.procs.each(function (desc) {
-					       svc[desc.name] = svc.makeGenericProxy(desc);
-					   });
+						      {debug: this.options.debug});
+	txn.addCallback(receiveServiceDescription);
+	function receiveServiceDescription(sd) {
+	    svc.serviceDescription = sd;
+	    svc.serviceDescription.procs.each(svc.installGenericProxy.bind(svc));
+	    onReady();
+	}
     },
 
-    makeGenericProxy: function(desc) {
-	return function () {
+    installGenericProxy: function(desc) {
+	this[desc.name] = function () {
 	    var actuals = $A(arguments);
 	    return new (this.options.transactionClass)(this.serviceDescription.address,
 						       desc.name,

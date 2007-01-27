@@ -7,6 +7,8 @@ function log() {
 
 function testMain() {
     log("Starting.");
-    var testService = new JsonRpcService(document.location + "rpc/test");
-    testService.test_proc("Hello, world!").addCallback(log);
+    var testService = new JsonRpcService(document.location + "rpc/test", onReady);
+    function onReady() {
+	testService.test_proc("Hello, world!").addCallback(log);
+    }
 }

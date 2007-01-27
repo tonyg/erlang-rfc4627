@@ -17,15 +17,23 @@ Object.extend(JsonRpcTransaction.prototype,
 	this.replyReady = 0;
 	this.callbacks = [];
 	this.errorCallbacks = [];
+	this.sendRequest();
+    },
+
+    buildRequest: function() {
+	return { version: "1.1",
+		 id: JsonRpcRequestId++,
+		 method: this.methodName,
+		 params: this.params };
+    },
+
+    sendRequest: function() {
 	this.request =
-	    new Ajax.Request(serviceUrl,
+	    new Ajax.Request(this.serviceUrl,
 			     { method: 'post',
 			       requestHeaders: ['Content-type', 'application/json',
 						'Accept', 'application/json'],
-			       postBody: JSON.stringify({ version: "1.1",
-							  id: JsonRpcRequestId++,
-							  method: methodName,
-							  params: params }),
+			       postBody: JSON.stringify(this.buildRequest()),
 			       asynchronous: this.options.asynchronous,
 			       onComplete: this.receiveReply.bind(this) });
 	if (!this.options.asynchronous) {
@@ -38,8 +46,8 @@ Object.extend(JsonRpcTransaction.prototype,
 	if (response.error) {
 	    if (this.options.debug) {
 		alert("JsonRPC error:\n" +
-		      "Service: " + this.serviceUrl + "\n" +
-		      "Method: " + this.methodName + "\n" +
+		      "Service: " + JSON.stringify(this.serviceUrl) + "\n" +
+		      "Method: " + JSON.stringify(this.methodName) + "\n" +
 		      "Params: " + JSON.stringify(this.params) + "\n" +
 		      "Response: " + JSON.stringify(response) + "\n");
 	    }
@@ -83,15 +91,16 @@ Object.extend(JsonRpcService.prototype,
 {
     initialize: function(serviceUrl, options) {
 	this.options = {
+	    transactionClass: JsonRpcTransaction,
 	    debug: false
 	};
 	Object.extend(this.options, options || {});
 	this.serviceUrl = serviceUrl;
-	var txn = new JsonRpcTransaction(serviceUrl,
-					 "system.describe",
-					 [],
-					 {asynchronous: false,
-					  debug: this.options.debug});
+	var txn = new (this.options.transactionClass)(serviceUrl,
+						      "system.describe",
+						      [],
+						      {asynchronous: false,
+						       debug: this.options.debug});
 	this.serviceDescription = txn.reply;
 	var svc = this;
 	this.serviceDescription.procs.each(function (desc) {
@@ -102,10 +111,10 @@ Object.extend(JsonRpcService.prototype,
     makeGenericProxy: function(desc) {
 	return function () {
 	    var actuals = $A(arguments);
-	    return new JsonRpcTransaction(this.serviceDescription.address,
-					  desc.name,
-					  actuals,
-					  {debug: this.options.debug});
+	    return new (this.options.transactionClass)(this.serviceDescription.address,
+						       desc.name,
+						       actuals,
+						       {debug: this.options.debug});
 	};
     }
 });

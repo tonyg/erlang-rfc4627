@@ -6,6 +6,7 @@ SOURCES=$(wildcard $(SOURCE_DIR)/*.erl)
 TARGETS=$(patsubst $(SOURCE_DIR)/%.erl, $(EBIN_DIR)/%.beam,$(SOURCES))
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall +debug_info # +native -v
 DIST_DIR=dist
+SIGNING_KEY_ID=E96F1FA7
 
 all: $(TARGETS)
 
@@ -27,7 +28,7 @@ debian-package: clean
 	tar -cf debian-package.tar .
 	mkdir build
 	cd build; tar -xf ../debian-package.tar
-	cd build; dpkg-buildpackage -rfakeroot
+	cd build; dpkg-buildpackage -rfakeroot -k$(SIGNING_KEY_ID)
 	rm -rf build debian-package.tar
 
 test-compile:

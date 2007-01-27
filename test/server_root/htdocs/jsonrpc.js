@@ -107,7 +107,7 @@ Object.extend(JsonRpcService.prototype,
     installGenericProxy: function(desc) {
 	this[desc.name] = function () {
 	    var actuals = $A(arguments);
-	    return new (this.options.transactionClass)(this.serviceDescription.address,
+	    return new (this.options.transactionClass)(this.serviceUrl,
 						       desc.name,
 						       actuals,
 						       {debug: this.options.debug});

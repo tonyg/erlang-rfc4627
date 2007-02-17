@@ -18,7 +18,7 @@ clean:
 
 dist: all
 	mkdir -p $(DIST_DIR)
-	cp -r ebin src $(DIST_DIR)
+	cp -r doc ebin include src test Makefile $(DIST_DIR)
 
 distclean: clean
 	rm -rf $(DIST_DIR)

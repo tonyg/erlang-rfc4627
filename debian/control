@@ -8,4 +8,4 @@ Standards-Version: 3.7.2
 Package: rfc4627-erlang
 Architecture: all
 Depends: erlang-base | erlang-base-hipe
-Description: A JSON (RFC4627) codec for Erlang
+Description: A JSON (RFC4627) codec and JSON-RPC server for Erlang

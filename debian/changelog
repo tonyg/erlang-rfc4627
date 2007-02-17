@@ -1,3 +1,11 @@
+rfc4627-erlang (1.0.2-1) unstable; urgency=low
+
+  * Documentation for release
+  * Minor API improvements
+  * MIT licensing
+
+ -- Tony Garnock-Jones <tonyg@lshift.net>  Sat, 17 Feb 2007 14:44:57 +0000
+
 rfc4627-erlang (1.0.1-1) unstable; urgency=low
 
   * JSON-RPC transport is factored out on the client

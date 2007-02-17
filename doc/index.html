@@ -5,67 +5,9 @@
   <body>
     <h1>Documentation for rfc4627 and mod_jsonrpc for Erlang</h1>
 
-    <h2>rfc4627, the JSON codec</h2>
-
-    <p>
-      Links:
-    </p>
-
     <ul>
-      <li><a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a></li>
-      <li><a href="http://www.json.org/">JSON in general</a></li>
+      <li><a href="rfc4627.html">rfc4627</a></li>
+      <li><a href="mod_jsonrpc.html">mod_jsonrpc</a></li>
     </ul>
-
-    <p>
-      Basic API:
-    </p>
-
-    <pre>encode(val()) -> str()
-decode(str()) -> {ok, val(), str()} | {error, Reason}
-                 where Reason is usually far too much information
-                 and should be ignored.</pre>
-
-    <p>
-      The data type mapping I've implemented is as per Joe Armstrong's
-      message <a
-      href="http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html">http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html</a>:
-    </p>
-
-    <pre>    JSON Obj    = type obj()   = {obj, [{key(), val()}]}
-    JSON Array  = type array() = [val()]
-    JSON Number = type num()   = int() | float() 
-    JSON String = type str()   = bin()
-    JSON true false null       = true, false null (atoms)
-    With Type val() = obj() | array() | num() | str() | true | false | null
-    and key() being a str(). (Or a binary or atom, during JSON encoding.)</pre>
-
-    <p>
-      No unicode processing is done other than minimal \uXXXX parsing
-      and generation; since JSON strings are represented by Erlang
-      binaries, and I'm not doing any unicode encoding at all, it will
-      most likely break in interesting ways for some uses of unicode
-      at the moment. On the other hand, I'm not touching any existing
-      unicode encoding, so if the input text is in UTF-8 and avoids
-      using explicit \uXXXX escapes, it might Just Work. The right
-      thing to do is probably to UTF-8 encode explicit \uXXXX escapes,
-      too.
-    </p>
-
-    <p>
-      I'm lenient in the following ways during parsing:
-    </p>
-
-    <ul>
-      <li>repeated commas in arrays and objects collapse to a single comma</li>
-      <li>characters =&lt;32 or &gt;127 that somehow appear in the input stream inside a string are silently accepted unchanged</li>
-      <li>any character =&lt;32 is considered whitespace</li>
-      <li>leading zeros for numbers are accepted</li>
-    </ul>
-
-    <h2>mod_jsonrpc</h2>
-
-    <p>
-    </p>
-
   </body>
 </html>

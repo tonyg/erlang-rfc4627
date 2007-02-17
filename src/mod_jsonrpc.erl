@@ -34,7 +34,7 @@
 -export([start/0]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
--export([register_service/2, error_response/2, error_response/3, service/4, service/5, proc/2]).
+-export([lookup_service/1, register_service/2, error_response/2, error_response/3, service/4, service/5, proc/2]).
 -export([gen_object_name/0, service_address/2, system_describe/2]).
 -export([jsonrpc_post/3, invoke_service_method/5]).
 
@@ -66,6 +66,9 @@ build_jsonrpc_response(Id, ResultField) ->
 	   {id, Id},
 	   ResultField]}.
 
+lookup_service(Service) ->
+    gen_server:call(mod_jsonrpc, {lookup_service, Service}).
+
 do_rpc(ModData = #mod{data = OldData}) ->
     case extract_object_method_and_params(ModData) of
 	no_match ->
@@ -74,7 +77,7 @@ do_rpc(ModData = #mod{data = OldData}) ->
 	    {PostOrGet, Id, Service, Method, Args} = parse_jsonrpc(ModData, UriInfo),
 	    {Headers, ResultField} =
 		expand_jsonrpc_reply(
-		  case gen_server:call(mod_jsonrpc, {lookup_service, Service}) of
+		  case lookup_service(Service) of
 		      not_found ->
 			  error_response(404, "Service not found", Service);
 		      ServiceRec ->

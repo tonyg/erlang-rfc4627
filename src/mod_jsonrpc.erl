@@ -31,7 +31,7 @@
 
 -behaviour(gen_server).
 
--export([start/0]).
+-export([start/0, start_link/0]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 -export([do/1, load/2]).
 -export([lookup_service/1, register_service/2, error_response/2, error_response/3, service/4, service/5, proc/2]).
@@ -40,6 +40,9 @@
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
+
+start_link() ->
+    gen_server:start_link({local, mod_jsonrpc}, ?MODULE, [], []).
 
 do(ModData = #mod{data = OldData}) ->
     case {httpd_util:key1search(OldData, status),

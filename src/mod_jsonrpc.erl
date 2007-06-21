@@ -36,7 +36,7 @@
 -export([do/1, load/2]).
 -export([lookup_service/1, register_service/2, error_response/2, error_response/3, service/4, service/5, proc/2]).
 -export([gen_object_name/0, service_address/2, system_describe/2]).
--export([jsonrpc_post/3, invoke_service_method/5]).
+-export([jsonrpc_post/3, jsonrpc_post/4, invoke_service_method/6]).
 
 start() ->
     gen_server:start({local, mod_jsonrpc}, ?MODULE, [], []).
@@ -57,11 +57,15 @@ load("JsonRpcAlias " ++ Alias, []) ->
     {ok, [], {json_rpc_alias, Alias}}.
 
 jsonrpc_post(ServiceRec, ModData, {obj, Fields}) ->
+    jsonrpc_post(ServiceRec, ModData, {obj, Fields}, 0).
+
+jsonrpc_post(ServiceRec, ModData, {obj, Fields}, Timeout) ->
     Id = httpd_util:key1search(Fields, "id"),
     Method = httpd_util:key1search(Fields, "method"),
     Args = httpd_util:key1search(Fields, "params"),
     {Headers, ResultField} =
-	expand_jsonrpc_reply(invoke_service_method(ServiceRec, post, ModData, Method, Args)),
+	expand_jsonrpc_reply(
+	  invoke_service_method(ServiceRec, post, ModData, Method, Args, Timeout)),
     {Headers, build_jsonrpc_response(Id, ResultField)}.
 
 build_jsonrpc_response(Id, ResultField) ->
@@ -77,14 +81,15 @@ do_rpc(ModData = #mod{data = OldData}) ->
 	no_match ->
 	    {proceed, OldData};
 	UriInfo = {_Object, _UriMethod, _UriParamStr} ->
-	    {PostOrGet, Id, Service, Method, Args} = parse_jsonrpc(ModData, UriInfo),
+	    {PostOrGet, Id, Service, Method, Args, Timeout} = parse_jsonrpc(ModData, UriInfo),
 	    {Headers, ResultField} =
 		expand_jsonrpc_reply(
 		  case lookup_service(Service) of
 		      not_found ->
 			  error_response(404, "Service not found", Service);
 		      ServiceRec ->
-			  invoke_service_method(ServiceRec, PostOrGet, ModData, Method, Args)
+			  invoke_service_method(
+			    ServiceRec, PostOrGet, ModData, Method, Args, Timeout)
 		  end),
 	    Result = build_jsonrpc_response(Id, ResultField),
 	    ResultEnc = lists:flatten(rfc4627:encode(Result)),
@@ -97,7 +102,7 @@ do_rpc(ModData = #mod{data = OldData}) ->
     end.
 
 invoke_service_method(ServiceRec = #service{name = ServiceName},
-		      PostOrGet, ModData, Method, Args) ->
+		      PostOrGet, ModData, Method, Args, Timeout) ->
     case Method of
 	<<"system.describe">> ->
 	    {result, system_describe(service_address(ModData, ServiceName), ServiceRec)};
@@ -107,7 +112,7 @@ invoke_service_method(ServiceRec = #service{name = ServiceName},
 	    case lookup_service_proc(ServiceRec, Method) of
 		{ok, ServiceProc} ->
 		    invoke_service(PostOrGet, ServiceRec#service.handler,
-				   ModData, ServiceProc, Args);
+				   ModData, ServiceProc, Args, Timeout);
 		not_found ->
 		    error_response(404, "Procedure not found", [ServiceName, Method])
 	    end
@@ -225,15 +230,26 @@ extract_object_method_and_params(#mod{config_db = ConfigDb, request_uri = Uri}) 
 	    no_match
     end.
 
-parse_jsonrpc(#mod{method = "POST", entity_body = Body},
+extract_timeout_header(#mod{parsed_header = ParsedHeader}) ->
+    case httpd_util:key1search(ParsedHeader, "x-json-rpc-timeout", "default") of
+	"default" ->
+	    default;
+	"infinity" ->
+	    infinity;
+	NumStr ->
+	    list_to_integer(NumStr)
+    end.
+
+parse_jsonrpc(ModData = #mod{method = "POST", entity_body = Body},
 	      {Object, _UriMethod, _UriParams}) ->
     {ok, {obj, Fields}, _} = rfc4627:decode(Body),
     {post,
      httpd_util:key1search(Fields, "id"),
      Object,
      httpd_util:key1search(Fields, "method"),
-     httpd_util:key1search(Fields, "params")};
-parse_jsonrpc(#mod{method = _},
+     httpd_util:key1search(Fields, "params"),
+     extract_timeout_header(ModData)};
+parse_jsonrpc(ModData = #mod{method = _},
 	     {Object, Method, QueryStr}) ->
     %% GET, presumably. We don't really care, here.
     Q = case httpd:parse_query(QueryStr) of
@@ -247,7 +263,8 @@ parse_jsonrpc(#mod{method = _},
      %% FIXME: need to collect duplicate parameter keys into a list, as per spec
      {obj, lists:map(fun ({Key, ValStr}) ->
 			     {Key, list_to_binary(ValStr)}
-		     end, Q)}}.
+		     end, Q)},
+     extract_timeout_header(ModData)}.
 
 lookup_service_proc(#service{procs = Procs}, Method) ->
     case lists:keysearch(Method, #service_proc.name, Procs) of
@@ -257,19 +274,19 @@ lookup_service_proc(#service{procs = Procs}, Method) ->
 	    not_found
     end.
 
-invoke_service(get, Handler, ModData, ServiceProc, Args) ->
+invoke_service(get, Handler, ModData, ServiceProc, Args, Timeout) ->
     if
 	ServiceProc#service_proc.idempotent ->
-	    invoke_service1(Handler, ModData, ServiceProc, Args);
+	    invoke_service1(Handler, ModData, ServiceProc, Args, Timeout);
 	true ->
 	    error_response(403, "Non-idempotent method", ServiceProc#service_proc.name)
     end;
-invoke_service(post, Handler, ModData, ServiceProc, Args) ->
-    invoke_service1(Handler, ModData, ServiceProc, Args).
+invoke_service(post, Handler, ModData, ServiceProc, Args, Timeout) ->
+    invoke_service1(Handler, ModData, ServiceProc, Args, Timeout).
 
-invoke_service1(Handler, ModData, #service_proc{name = Name, params = Params}, Args) ->
+invoke_service1(Handler, ModData, #service_proc{name = Name, params = Params}, Args, Timeout) ->
     %%error_logger:info_msg("JSONRPC invoking ~p:~p(~p)", [Handler, Name, Args]),
-    case catch run_handler(Handler, Name, ModData, coerce_args(Params, Args)) of
+    case catch run_handler(Handler, Name, ModData, coerce_args(Params, Args), Timeout) of
 	{'EXIT', {{function_clause, _}, _}} ->
 	    error_response(404, "Undefined procedure", Name);
 	{'EXIT', Reason} ->
@@ -278,9 +295,11 @@ invoke_service1(Handler, ModData, #service_proc{name = Name, params = Params}, A
 	    Response
     end.
 
-run_handler({pid, Pid}, Name, ModData, CoercedArgs) ->
+run_handler({pid, Pid}, Name, ModData, CoercedArgs, default) ->
     gen_server:call(Pid, {jsonrpc, Name, ModData, CoercedArgs});
-run_handler({function, F}, Name, ModData, CoercedArgs) ->
+run_handler({pid, Pid}, Name, ModData, CoercedArgs, Timeout) ->
+    gen_server:call(Pid, {jsonrpc, Name, ModData, CoercedArgs}, Timeout);
+run_handler({function, F}, Name, ModData, CoercedArgs, _Timeout) ->
     F(Name, ModData, CoercedArgs).
 
 coerce_args(_Params, Args) when is_list(Args) ->

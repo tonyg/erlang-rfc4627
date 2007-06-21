@@ -5,7 +5,8 @@ Object.extend(JsonRpcTransaction.prototype,
 {
     initialize: function(serviceUrl, methodName, params, options) {
 	this.options = {
-	    debug: false
+	    debug: false,
+	    timeout: 0 /* milliseconds; zero means "do not specify" */
 	};
 	Object.extend(this.options, options || {});
 	this.serviceUrl = serviceUrl;
@@ -27,11 +28,15 @@ Object.extend(JsonRpcTransaction.prototype,
     },
 
     sendRequest: function() {
+	var headers = ['Content-type', 'application/json',
+		       'Accept', 'application/json'];
+	if (this.options.timeout) {
+	    headers.push('X-JSON-RPC-Timeout', this.options.timeout);
+	}
 	this.request =
 	    new Ajax.Request(this.serviceUrl,
 			     { method: 'post',
-			       requestHeaders: ['Content-type', 'application/json',
-						'Accept', 'application/json'],
+			       requestHeaders: headers,
 			       postBody: JSON.stringify(this.buildRequest()),
 			       onComplete: this.receiveReply.bind(this) });
     },
@@ -87,6 +92,7 @@ Object.extend(JsonRpcService.prototype,
     initialize: function(serviceUrl, onReady, options) {
 	this.options = {
 	    transactionClass: JsonRpcTransaction,
+	    timeout: 0, /* milliseconds; zero means "do not specify" */
 	    debug: false
 	};
 	Object.extend(this.options, options || {});
@@ -110,7 +116,10 @@ Object.extend(JsonRpcService.prototype,
 	    return new (this.options.transactionClass)(this.serviceUrl,
 						       desc.name,
 						       actuals,
-						       {debug: this.options.debug});
+						       {
+							   debug: this.options.debug,
+							   timeout: this.options.timeout
+						       });
 	};
     }
 });

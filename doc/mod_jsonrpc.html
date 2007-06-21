@@ -358,11 +358,11 @@
     </p>
 
     <p>
-      The function <code>mod_jsonrpc:invoke_service_method/5</code>
+      The function <code>mod_jsonrpc:invoke_service_method/6</code>
       performs the necessary RPC:
     </p>
 
-    <pre>    mod_jsonrpc:invoke_service_method(ServiceRec, PostOrGet, ModData, Method, Args)
+    <pre>    mod_jsonrpc:invoke_service_method(ServiceRec, PostOrGet, ModData, Method, Args, Timeout)
       -> {result, JsonValue} | {error, ErrorJsonValue}
 
     ServiceRec = retrieved from mod_jsonrpc:lookup_service/1
@@ -370,6 +370,7 @@
     ModData = none | webserver-API #mod record | other transport-specific data structure
     Method = binary() name of service procedure to invoke
     Args = [JsonValue] list of parameters
+    Timeout = default | infinity | int()&gt;=0
     JsonValue = Erlang data type mapping of a JSON object
     ErrorJsonValue = Erlang mapping of an <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ErrorObject">JSON-RPC error object</a></pre>
 
@@ -391,10 +392,18 @@
     </p>
 
     <p>
+      The Timeout parameter is used to control how long mod_jsonrpc
+      will wait for a reply from the backing gen_server. If "default"
+      is specified, the default gen_server:call timeout is used;
+      otherwise, "infinity" or a number of milliseconds is passed in
+      to the gen_server:call.
+    </p>
+
+    <p>
       Continuing with our example service as defined above:
     </p>
 
-    <pre>    mod_jsonrpc:invoke_service_method(ServiceRec, post, none, &lt;&lt;"test_proc"&gt;&gt;, [&lt;&lt;"xyz"&gt;&gt;])
+    <pre>    mod_jsonrpc:invoke_service_method(ServiceRec, post, none, &lt;&lt;"test_proc"&gt;&gt;, [&lt;&lt;"xyz"&gt;&gt;], default)
       --> {result, &lt;&lt;"ErlangServer: xyz"&gt;&gt;}</pre>
 
     <p>
@@ -434,7 +443,7 @@
 
     <p>
       The resulting service descriptor can be used directly with
-      <code>mod_jsonrpc:invoke_service_method/5</code>.
+      <code>mod_jsonrpc:invoke_service_method/6</code>.
     </p>
 
   </body>

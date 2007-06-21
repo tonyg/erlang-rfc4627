@@ -57,7 +57,7 @@ load("JsonRpcAlias " ++ Alias, []) ->
     {ok, [], {json_rpc_alias, Alias}}.
 
 jsonrpc_post(ServiceRec, ModData, {obj, Fields}) ->
-    jsonrpc_post(ServiceRec, ModData, {obj, Fields}, 0).
+    jsonrpc_post(ServiceRec, ModData, {obj, Fields}, default).
 
 jsonrpc_post(ServiceRec, ModData, {obj, Fields}, Timeout) ->
     Id = httpd_util:key1search(Fields, "id"),

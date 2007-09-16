@@ -34,6 +34,7 @@
 test_all() ->
     passed = test_codec(),
     passed = test_records(),
+    passed = test_unicode(),
     passed.
 
 test_codec() ->
@@ -64,6 +65,42 @@ test_codec({Erl, Json, EofExpected}) ->
     {ok, Erl, []} = rfc4627:decode(rfc4627:encode(Erl)),
     {ok, Erl, Rest} = rfc4627:decode(Json),
     {at_eof, EofExpected} = {at_eof, (Rest == [])},
+    passed.
+
+%% UTF tests.
+test_unicode() ->
+    passed = test_unicode_encodings(),
+    passed = test_unicode_json(),
+    passed.
+
+test_unicode_encodings() ->
+    ZWaterBass = [16#0000007A, 16#00006C34, 16#0001D11E],
+    U32B = [0, 0, 16#00, 16#7A, 0, 0, 16#6C, 16#34, 0, 1, 16#D1, 16#1E]
+	= rfc4627:unicode_encode({'utf-32be', ZWaterBass}),
+    U32L = [16#7A, 0, 0, 0, 16#34, 16#6C, 0, 0, 16#1E, 16#D1, 1, 0]
+	= rfc4627:unicode_encode({'utf-32le', ZWaterBass}),
+    U32B_BOM = [0, 0, 16#FE, 16#FF, 0, 0, 16#00, 16#7A, 0, 0, 16#6C, 16#34, 0, 1, 16#D1, 16#1E]
+	= rfc4627:unicode_encode({'utf-32', ZWaterBass}),
+    U16L = [16#7A, 16#00, 16#34, 16#6C, 16#34, 16#D8, 16#1E, 16#DD]
+	= rfc4627:unicode_encode({'utf-16le', ZWaterBass}),
+    U16B = [16#00, 16#7A, 16#6C, 16#34, 16#D8, 16#34, 16#DD, 16#1E]
+	= rfc4627:unicode_encode({'utf-16be', ZWaterBass}),
+    U16B_BOM = [16#FE, 16#FF, 16#00, 16#7A, 16#6C, 16#34, 16#D8, 16#34, 16#DD, 16#1E]
+	= rfc4627:unicode_encode({'utf-16', ZWaterBass}),
+    U8 = [16#7A, 16#E6,16#B0,16#B4, 16#F0,16#9D,16#84,16#9E]
+	= rfc4627:unicode_encode({'utf-8', ZWaterBass}),
+    {'utf-32be', ZWaterBass} = rfc4627:unicode_decode(U32B),
+    {'utf-32le', ZWaterBass} = rfc4627:unicode_decode(U32L),
+    {'utf-32', ZWaterBass} = rfc4627:unicode_decode(U32B_BOM),
+    {'utf-16be', ZWaterBass} = rfc4627:unicode_decode(U16B),
+    {'utf-16le', ZWaterBass} = rfc4627:unicode_decode(U16L),
+    {'utf-16', ZWaterBass} = rfc4627:unicode_decode(U16B_BOM),
+    {'utf-8', ZWaterBass} = rfc4627:unicode_decode(U8),
+    {'utf-8', ZWaterBass} = rfc4627:unicode_decode([16#EF,16#BB,16#BF]++U8),
+    passed.
+
+test_unicode_json() ->
+    rfc4627:decode("\"" ++ [16#7A, 16#E6,16#B0,16#B4, 16#F0,16#9D,16#84,16#9E] ++ "\""),
     passed.
 
 test_records() ->

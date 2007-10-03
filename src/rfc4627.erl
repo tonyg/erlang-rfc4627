@@ -50,18 +50,20 @@
 %%  - we don't restrict the toplevel token to only object or array -
 %%    any JSON value can be used at toplevel
 %%
-%% When serializing a string, if characters are found with codepoint >
-%% 127, they are currently escaped using the \uXXXX syntax. Another
-%% option would be to simply pass these through unchanged, relying on
-%% the unicode encoder to build the proper byte sequence for
-%% transmission.
+%% When serializing a string, if characters are found with codepoint
+%% >127, we rely on the unicode encoder to build the proper byte
+%% sequence for transmission. We still use the \uXXXX escape for
+%% control characters (other than the RFC-specified specially
+%% recognised ones).
 %%
 %% decode/1 will autodetect the unicode encoding used, and any strings
-%% returned in the result (including object keys) will contain unicode
-%% codepoints, rather than encoded byte sequences for codepoints. If
-%% you have already transformed the text to parse into a list of
-%% unicode codepoints, perhaps by your own use of unicode_decode/1,
-%% then use decode_noauto/1 instead.
+%% returned in the result as binaries will contain UTF-8 encoded byte
+%% sequences for codepoints >127. Object keys containing codepoints
+%% >127 will be returned as lists of codepoints, rather than being
+%% UTF-8 encoded. If you have already transformed the text to parse
+%% into a list of unicode codepoints, perhaps by your own use of
+%% unicode_decode/1, then use decode_noauto/1 to avoid redundant and
+%% erroneous double-unicode-decoding.
 %%
 %% Similarly, encode/1 produces text that is already UTF-8 encoded. To
 %% get raw codepoints, use encode_noauto/1 and encode_noauto/2. You
@@ -92,7 +94,8 @@ encode_noauto(false, Acc) ->
 encode_noauto(null, Acc) ->
     "llun" ++ Acc;
 encode_noauto(Str, Acc) when is_binary(Str) ->
-    quote_and_encode_string(binary_to_list(Str), Acc);
+    Codepoints = xmerl_ucs:from_utf8(Str),
+    quote_and_encode_string(Codepoints, Acc);
 encode_noauto(Str, Acc) when is_atom(Str) ->
     quote_and_encode_string(atom_to_list(Str), Acc);
 encode_noauto(Num, Acc) when is_number(Num) ->
@@ -110,7 +113,8 @@ encode_object([{Key, Value} | Rest], Acc) ->
     encode_object(Rest, "," ++ encode_field(Key, Value, Acc)).
 
 encode_field(Key, Value, Acc) when is_binary(Key) ->
-    encode_noauto(Value, ":" ++ quote_and_encode_string(binary_to_list(Key), Acc));
+    Codepoints = xmerl_ucs:from_utf8(Key),
+    encode_noauto(Value, ":" ++ quote_and_encode_string(Codepoints, Acc));
 encode_field(Key, Value, Acc) when is_atom(Key) ->
     encode_noauto(Value, ":" ++ quote_and_encode_string(atom_to_list(Key), Acc));
 encode_field(Key, Value, Acc) when is_list(Key) ->
@@ -142,6 +146,7 @@ encode_general_char(9, Acc) -> [$t, $\\ | Acc];
 encode_general_char(10, Acc) -> [$n, $\\ | Acc];
 encode_general_char(12, Acc) -> [$f, $\\ | Acc];
 encode_general_char(13, Acc) -> [$r, $\\ | Acc];
+encode_general_char(X, Acc) when X > 127 -> [X | Acc];
 encode_general_char(X, Acc) ->
     [hex_digit((X) band 16#F),
      hex_digit((X bsr 4) band 16#F),
@@ -245,8 +250,8 @@ unicode_encode({'utf-16le', C}) -> xmerl_ucs:to_utf16le(C);
 unicode_encode({'utf-8', C}) -> xmerl_ucs:to_utf8(C).
 
 parse([$" | Rest]) -> %% " emacs balancing
-    {Str, Rest1} = parse_string(Rest, []),
-    {list_to_binary(Str), Rest1};
+    {Codepoints, Rest1} = parse_string(Rest, []),
+    {list_to_binary(xmerl_ucs:to_utf8(Codepoints)), Rest1};
 parse("true" ++ Rest) -> {true, Rest};
 parse("false" ++ Rest) -> {false, Rest};
 parse("null" ++ Rest) -> {null, Rest};
@@ -379,10 +384,10 @@ parse_object([$} | Rest], Acc) ->
 parse_object([$, | Rest], Acc) ->
     parse_object(skipws(Rest), Acc);
 parse_object([$" | Rest], Acc) -> %% " emacs balancing
-    {Key, Rest1} = parse_string(Rest, []),
+    {KeyCodepoints, Rest1} = parse_string(Rest, []),
     [$: | Rest2] = skipws(Rest1),
     {Value, Rest3} = parse(skipws(Rest2)),
-    parse_object(skipws(Rest3), [{Key, Value} | Acc]).
+    parse_object(skipws(Rest3), [{KeyCodepoints, Value} | Acc]).
 
 parse_array([$] | Rest], Acc) ->
     {lists:reverse(Acc), Rest};

@@ -45,6 +45,13 @@ test_codec() ->
 	     {12.3, "1.23e1"},
 	     {<<"hi">>, "\"hi\""},
 	     {<<>>, "\"\""},
+	     {<<"\n">>, "\"\\n\""},
+	     {<<"\t">>, "\"\\t\""},
+	     {<<"\\">>, "\"\\\\\""},
+	     {<<195,133>>, [34,0,16#c5,0,34,0]},
+	     {<<127>>, [34,0,16#7f,0,34,0]},
+	     {<<194,128>>, [34,0,16#80,0,34,0]},
+	     {<<30>>, "\"\\u001e\""},
 	     {[1, 2], "[1, 2]"},
 	     {[], "[]"},
 	     {{obj, [{"a", 1}, {"b", 2}]}, "{\"a\": 1, \"b\": 2}"},
@@ -100,7 +107,25 @@ test_unicode_encodings() ->
     passed.
 
 test_unicode_json() ->
-    rfc4627:decode("\"" ++ [16#7A, 16#E6,16#B0,16#B4, 16#F0,16#9D,16#84,16#9E] ++ "\""),
+    U16B = [16#00, 16#7A, 16#6C, 16#34, 16#D8, 16#34, 16#DD, 16#1E],
+    U16BQuote = [0, 16#22],
+    U32L = [16#7A, 0, 0, 0, 16#34, 16#6C, 0, 0, 16#1E, 16#D1, 1, 0],
+    U32LQuote = [16#22, 0, 0, 0],
+    U8 = [16#7A, 16#E6,16#B0,16#B4, 16#F0,16#9D,16#84,16#9E],
+    U8Bin = list_to_binary(U8),
+    {utf8_decode, {ok, U8Bin, ""}} =
+	{utf8_decode, rfc4627:decode("\"" ++ U8 ++ "\"")},
+    {utf16_decode, {ok, U8Bin, ""}} =
+	{utf16_decode, rfc4627:decode(U16BQuote ++ U16B ++ U16BQuote)},
+    {utf32_decode, {ok, U8Bin, ""}} =
+	{utf32_decode, rfc4627:decode(U32LQuote ++ U32L ++ U32LQuote)},
+    UnicodeKeyed = {obj, [{[16#C5], list_to_binary(xmerl_ucs:to_utf8([16#C5]))}]},
+    {utf8_roundtrip, {ok, UnicodeKeyed, ""}} =
+	{utf8_roundtrip, rfc4627:decode(rfc4627:encode(UnicodeKeyed))},
+    {utf16_roundtrip, {ok, UnicodeKeyed, ""}} =
+	{utf16_roundtrip, rfc4627:decode(rfc4627:unicode_encode({'utf-16le', rfc4627:encode_noauto(UnicodeKeyed)}))},
+    {utf32_roundtrip, {ok, UnicodeKeyed, ""}} =
+	{utf32_roundtrip, rfc4627:decode(rfc4627:unicode_encode({'utf-32be', rfc4627:encode_noauto(UnicodeKeyed)}))},
     passed.
 
 test_records() ->

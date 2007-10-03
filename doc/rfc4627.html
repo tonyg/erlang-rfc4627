@@ -38,15 +38,29 @@ decode(str()) -> {ok, val(), str()} | {error, Reason}
     and key() being a str(). (Or a binary or atom, during JSON encoding.)</pre>
 
     <p>
-      No unicode processing is done other than minimal \uXXXX parsing
-      and generation; since JSON strings are represented by Erlang
-      binaries, and I'm not doing any unicode encoding at all, it will
-      most likely break in interesting ways for some uses of unicode
-      at the moment. On the other hand, I'm not touching any existing
-      unicode encoding, so if the input text is in UTF-8 and avoids
-      using explicit \uXXXX escapes, it might Just Work. The right
-      thing to do is probably to UTF-8 encode explicit \uXXXX escapes,
-      too.
+      When serializing a string, if characters are found with codepoint
+      &gt;127, we rely on the unicode encoder to build the proper byte
+      sequence for transmission. We still use the \uXXXX escape for
+      control characters (other than the RFC-specified specially
+      recognised ones).
+    </p>
+
+    <p>
+      decode/1 will autodetect the unicode encoding used, and any strings
+      returned in the result as binaries will contain UTF-8 encoded byte
+      sequences for codepoints &gt;127. Object keys containing codepoints
+      &gt;127 will be returned as lists of codepoints, rather than being
+      UTF-8 encoded. If you have already transformed the text to parse
+      into a list of unicode codepoints, perhaps by your own use of
+      unicode_decode/1, then use decode_noauto/1 to avoid redundant and
+      erroneous double-unicode-decoding.
+    </p>
+
+    <p>
+      Similarly, encode/1 produces text that is already UTF-8 encoded. To
+      get raw codepoints, use encode_noauto/1 and encode_noauto/2. You
+      can use unicode_encode/1 to UTF-encode the results, if that's
+      appropriate for your application.
     </p>
 
     <p>
@@ -55,10 +69,12 @@ decode(str()) -> {ok, val(), str()} | {error, Reason}
 
     <ul>
       <li>repeated commas in arrays and objects collapse to a single comma</li>
-      <li>characters =&lt;32 or &gt;127 that somehow appear in the input stream inside a string are silently accepted unchanged</li>
       <li>any character =&lt;32 is considered whitespace</li>
       <li>leading zeros for numbers are accepted</li>
+      <li>
+	we don't restrict the toplevel token to only object or array -
+	any JSON value can be used at toplevel
+      </li>
     </ul>
-
   </body>
 </html>

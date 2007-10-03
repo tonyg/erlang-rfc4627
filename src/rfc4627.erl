@@ -43,8 +43,6 @@
 %%
 %% I'm lenient in the following ways during parsing:
 %%  - repeated commas in arrays and objects collapse to a single comma
-%%  - characters =<32 or >127 that somehow appear in the input stream
-%%    inside a string are silently accepted unchanged
 %%  - any character =<32 is considered whitespace
 %%  - leading zeros for numbers are accepted
 %%  - we don't restrict the toplevel token to only object or array -

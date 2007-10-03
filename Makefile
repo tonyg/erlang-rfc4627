@@ -33,3 +33,6 @@ debian-package: clean
 
 test-compile:
 	erlc $(ERLC_OPTS) $(wildcard test/*.erl)
+
+test: all test-compile
+	erl -pa ebin -noshell -eval 'passed = test_rfc4627:test_all(), c:q().'

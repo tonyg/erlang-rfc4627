@@ -146,12 +146,20 @@ encode_general_char(12, Acc) -> [$f, $\\ | Acc];
 encode_general_char(13, Acc) -> [$r, $\\ | Acc];
 encode_general_char(X, Acc) when X > 127 -> [X | Acc];
 encode_general_char(X, Acc) ->
-    [hex_digit((X) band 16#F),
-     hex_digit((X bsr 4) band 16#F),
-     hex_digit((X bsr 8) band 16#F),
-     hex_digit((X bsr 12) band 16#F),
-     $u,
-     $\\ | Acc].
+    %% FIXME currently this branch never runs.
+    %% We could make it configurable, maybe?
+    Utf16Bytes = xmerl_ucs:to_utf16be(X),
+    encode_utf16be_chars(Utf16Bytes, Acc).
+
+encode_utf16be_chars([], Acc) ->
+    Acc;
+encode_utf16be_chars([B1, B2 | Rest], Acc) ->
+    encode_utf16be_chars(Rest, [hex_digit((B2) band 16#F),
+				hex_digit((B2 bsr 4) band 16#F),
+				hex_digit((B1) band 16#F),
+				hex_digit((B1 bsr 4) band 16#F),
+				$u,
+				$\\ | Acc]).
 
 hex_digit(0) -> $0;
 hex_digit(1) -> $1;

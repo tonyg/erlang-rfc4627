@@ -270,26 +270,52 @@ skipws([X | Rest]) when X =< 32 ->
 skipws(Chars) ->
     Chars.
 
-parse_string([$" | Rest], Acc) -> %% " emacs balancing
-    {lists:reverse(Acc), Rest};
-parse_string([$\\, Key | Rest], Acc) ->
-    parse_general_char(Key, Rest, Acc);
-parse_string([X | Rest], Acc) ->
-    parse_string(Rest, [X | Acc]).
+parse_string(Chars, Acc) ->
+    case parse_codepoint(Chars) of
+	{done, Rest} ->
+	    {lists:reverse(Acc), Rest};
+	{ok, Codepoint, Rest} ->
+	    parse_string(Rest, [Codepoint | Acc])
+    end.
 
-parse_general_char($b, Rest, Acc) -> parse_string(Rest, [8 | Acc]);
-parse_general_char($t, Rest, Acc) -> parse_string(Rest, [9 | Acc]);
-parse_general_char($n, Rest, Acc) -> parse_string(Rest, [10 | Acc]);
-parse_general_char($f, Rest, Acc) -> parse_string(Rest, [12 | Acc]);
-parse_general_char($r, Rest, Acc) -> parse_string(Rest, [13 | Acc]);
-parse_general_char($/, Rest, Acc) -> parse_string(Rest, [$/ | Acc]);
-parse_general_char($\\, Rest, Acc) -> parse_string(Rest, [$\\ | Acc]);
-parse_general_char($", Rest, Acc) -> parse_string(Rest, [$" | Acc]);
-parse_general_char($u, [D0, D1, D2, D3 | Rest], Acc) ->
-    parse_string(Rest, [(digit_hex(D0) bsl 12) +
-			(digit_hex(D1) bsl 8) +
-			(digit_hex(D2) bsl 4) +
-			(digit_hex(D3)) | Acc]).
+parse_codepoint([$" | Rest]) -> %% " emacs balancing
+    {done, Rest};
+parse_codepoint([$\\, Key | Rest]) ->
+    parse_general_char(Key, Rest);
+parse_codepoint([X | Rest]) ->					   
+    {ok, X, Rest}.
+
+parse_general_char($b, Rest) -> {ok, 8, Rest};
+parse_general_char($t, Rest) -> {ok, 9, Rest};
+parse_general_char($n, Rest) -> {ok, 10, Rest};
+parse_general_char($f, Rest) -> {ok, 12, Rest};
+parse_general_char($r, Rest) -> {ok, 13, Rest};
+parse_general_char($/, Rest) -> {ok, $/, Rest};
+parse_general_char($\\, Rest) -> {ok, $\\, Rest};
+parse_general_char($", Rest) -> {ok, $", Rest};
+parse_general_char($u, [D0, D1, D2, D3 | Rest]) ->
+    Codepoint =
+	(digit_hex(D0) bsl 12) +
+	(digit_hex(D1) bsl 8) +
+	(digit_hex(D2) bsl 4) +
+	(digit_hex(D3)),
+    if
+	Codepoint >= 16#D800 andalso Codepoint < 16#DC00 ->
+	    % High half of surrogate pair
+	    case parse_codepoint(Rest) of
+		{low_surrogate_pair, Codepoint2, Rest1} ->
+		    [FinalCodepoint] =
+			xmerl_ucs:from_utf16be(<<Codepoint:16/big-unsigned-integer,
+						Codepoint2:16/big-unsigned-integer>>),
+		    {ok, FinalCodepoint, Rest1};
+		_ ->
+		    exit(incorrect_usage_of_surrogate_pair)
+	    end;
+	Codepoint >= 16#DC00 andalso Codepoint < 16#E000 ->
+	    {low_surrogate_pair, Codepoint, Rest};
+	true ->
+	    {ok, Codepoint, Rest}
+    end.
 
 digit_hex($0) -> 0;
 digit_hex($1) -> 1;

@@ -119,6 +119,10 @@ test_unicode_json() ->
 	{utf16_decode, rfc4627:decode(U16BQuote ++ U16B ++ U16BQuote)},
     {utf32_decode, {ok, U8Bin, ""}} =
 	{utf32_decode, rfc4627:decode(U32LQuote ++ U32L ++ U32LQuote)},
+    {u_escape_decode, {ok, U8Bin, ""}} =
+	{u_escape_decode, rfc4627:decode("\"\\u007a\\u6c34\\ud834\\udd1e\"")},
+    {u_escape_decode, {ok, U8Bin, ""}} =
+	{u_escape_decode, rfc4627:decode("\"z\\u6C34\\uD834\\uDD1E\"")},
     UnicodeKeyed = {obj, [{[16#C5], list_to_binary(xmerl_ucs:to_utf8([16#C5]))}]},
     {utf8_roundtrip, {ok, UnicodeKeyed, ""}} =
 	{utf8_roundtrip, rfc4627:decode(rfc4627:encode(UnicodeKeyed))},

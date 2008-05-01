@@ -14,6 +14,7 @@ $(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
 
 clean:
+	rm -f ebin/*.beam
 	rm -f $(TARGETS)
 
 dist: all

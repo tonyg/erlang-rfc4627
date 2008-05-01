@@ -1,3 +1,9 @@
+rfc4627-erlang (1.1.1) unstable; urgency=low
+
+  * Fix \u escaping for surrogate pairs.
+
+ -- Tony Garnock-Jones <tonyg@shortstop.lshift.net>  Thu, 01 May 2008 12:10:41 +0100
+
 rfc4627-erlang (1.1.0-1) unstable; urgency=low
 
   * Unicode support per RFC.

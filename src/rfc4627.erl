@@ -75,6 +75,7 @@
 -export([unicode_decode/1, unicode_encode/1]).
 -export([from_record/3, to_record/3]).
 -export([hex_digit/1, digit_hex/1]).
+-export([equiv/2]).
 
 mime_type() ->
     "application/json".
@@ -454,3 +455,25 @@ decode_record_fields(Values, Fallback, Index, [Field | Rest]) ->
 	 false ->
 	     element(Index, Fallback)
      end | decode_record_fields(Values, Fallback, Index + 1, Rest)].
+
+%% Equivalence of JSON terms. After Bob Ippolito's equiv predicate in mochijson.
+equiv({obj, Props1}, {obj, Props2}) ->
+    L1 = lists:keysort(1, Props1),
+    L2 = lists:keysort(1, Props2),
+    equiv_sorted_plists(L1, L2);
+equiv(A, B) when is_list(A) andalso is_list(B) ->
+    equiv_arrays(A, B);
+equiv(A, B) ->
+    A == B.
+
+equiv_sorted_plists([], []) -> true;
+equiv_sorted_plists([], _) -> false;
+equiv_sorted_plists(_, []) -> false;
+equiv_sorted_plists([{K1, V1} | R1], [{K2, V2} | R2]) ->
+    K1 == K2 andalso equiv(V1, V2) andalso equiv_sorted_plists(R1, R2).
+
+equiv_arrays([], []) -> true;
+equiv_arrays([], _) -> false;
+equiv_arrays(_, []) -> false;
+equiv_arrays([V1 | R1], [V2 | R2]) ->
+    equiv(V1, V2) andalso equiv_arrays(R1, R2).

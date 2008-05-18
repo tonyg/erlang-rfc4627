@@ -35,6 +35,7 @@ test_all() ->
     passed = test_codec(),
     passed = test_records(),
     passed = test_unicode(),
+    passed = test_equiv(),
     passed.
 
 test_codec() ->
@@ -142,4 +143,27 @@ test_records() ->
 					   {"street", <<"Rufus Street">>},
 					   {"town", <<"London">>}]}),
     {ok, AEnc, []} = rfc4627:decode(rfc4627:encode(AEnc)),
+    passed.
+
+test_equiv() ->
+    true = rfc4627:equiv([1, 2], [1, 2]),
+    false = rfc4627:equiv([1, 2], [2, 1]),
+    false = rfc4627:equiv([1, 2], [1]),
+    false = rfc4627:equiv([1], [1, 2]),
+    true = rfc4627:equiv([], []),
+    false = rfc4627:equiv([], [1]),
+    false = rfc4627:equiv([1], []),
+
+    true = rfc4627:equiv({obj, [{"a", true}, {"b", 123}]}, {obj, [{"a", true}, {"b", 123}]}),
+    true = rfc4627:equiv({obj, [{"a", true}, {"b", 123}]}, {obj, [{"b", 123}, {"a", true}]}),
+    false = rfc4627:equiv({obj, [{"a", true}, {"b", 124}]}, {obj, [{"a", true}, {"b", 123}]}),
+    false = rfc4627:equiv({obj, [{"b", 123}]}, {obj, [{"a", true}, {"b", 123}]}),
+    false = rfc4627:equiv({obj, [{"a", true}, {"b", 123}]}, {obj, [{"b", 123}]}),
+    true = rfc4627:equiv({obj, []}, {obj, []}),
+    false = rfc4627:equiv({obj, []}, {obj, [{"a", true}, {"b", 123}]}),
+
+    true = rfc4627:equiv(<<"ab">>, <<"ab">>),
+    false = rfc4627:equiv(<<"ab">>, <<"a">>),
+    true = rfc4627:equiv(<<>>, <<>>),
+
     passed.

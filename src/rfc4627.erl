@@ -75,6 +75,7 @@
 -export([unicode_decode/1, unicode_encode/1]).
 -export([from_record/3, to_record/3]).
 -export([hex_digit/1, digit_hex/1]).
+-export([get_field/2, get_field/3, set_field/3]).
 -export([equiv/2]).
 
 mime_type() ->
@@ -455,6 +456,25 @@ decode_record_fields(Values, Fallback, Index, [Field | Rest]) ->
 	 false ->
 	     element(Index, Fallback)
      end | decode_record_fields(Values, Fallback, Index + 1, Rest)].
+
+get_field({obj, Props}, Key) ->
+    case lists:keysearch(Key, 1, Props) of
+	{value, {_K, Val}} ->
+	    {ok, Val};
+	false ->
+	    not_found
+    end.
+
+get_field(Obj, Key, DefaultValue) ->
+    case get_field(Obj, Key) of
+	{ok, Val} ->
+	    Val;
+	not_found ->
+	    DefaultValue
+    end.
+
+set_field({obj, Props}, Key, NewValue) ->
+    {obj, [{Key, NewValue} | lists:keydelete(Key, 1, Props)]}.
 
 %% Equivalence of JSON terms. After Bob Ippolito's equiv predicate in mochijson.
 equiv({obj, Props1}, {obj, Props2}) ->

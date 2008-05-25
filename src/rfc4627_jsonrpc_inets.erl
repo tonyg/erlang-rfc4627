@@ -42,7 +42,8 @@ do(ModData = #mod{data = OldData}) ->
 load("JsonRpcAlias " ++ Alias, []) ->
     {ok, [], {json_rpc_alias, Alias}}.
 
-do_rpc(#mod{config_db = ConfigDb,
+do_rpc(#mod{init_data = #init_data{peername = {PeerPort, PeerName}},
+	    config_db = ConfigDb,
 	    socket_type = SocketType,
 	    method = HttpMethod,
 	    request_uri = PathAndQuery,
@@ -67,7 +68,9 @@ do_rpc(#mod{config_db = ConfigDb,
 
     RequestInfo = {obj, ([{"http_method", list_to_binary(HttpMethod)},
 			  {"http_query_parameters", QueryObj},
-			  {"http_headers", HeaderObj}]
+			  {"http_headers", HeaderObj},
+			  {"remote_port", PeerPort},
+			  {"remote_peername", list_to_binary(PeerName)}]
 			 ++ SchemeFields)},
 
     case rfc4627_jsonrpc_http:invoke_service_method(AliasPrefix,

@@ -24,10 +24,9 @@
 %% SOFTWARE.
 %%---------------------------------------------------------------------------
 
--module(test_jsonrpc).
+-module(test_jsonrpc_inets).
 
--include("rfc4627.hrl").
--include("mod_jsonrpc.hrl").
+-include("rfc4627_jsonrpc.hrl").
 
 -behaviour(gen_server).
 
@@ -36,19 +35,19 @@
 
 start() ->
     {ok, Pid} = gen_server:start(?MODULE, [], []),
-    mod_jsonrpc:register_service
+    rfc4627_jsonrpc:register_service
       (Pid,
-       mod_jsonrpc:service(<<"test">>,
-			   <<"urn:uuid:afe1b4b5-23b0-4964-a74a-9168535c96b2">>,
-			   <<"1.0">>,
-			   [#service_proc{name = <<"test_proc">>,
-					  idempotent = true,
-					  params = [#service_proc_param{name = <<"value">>,
-									type = <<"str">>}]}])).
+       rfc4627_jsonrpc:service(<<"test">>,
+			       <<"urn:uuid:afe1b4b5-23b0-4964-a74a-9168535c96b2">>,
+			       <<"1.0">>,
+			       [#service_proc{name = <<"test_proc">>,
+					      idempotent = true,
+					      params = [#service_proc_param{name = <<"value">>,
+									    type = <<"str">>}]}])).
 
 start_httpd() ->
+    rfc4627_jsonrpc:start(),
     httpd:start("test/server_root/conf/httpd.conf"),
-    mod_jsonrpc:start(),
     start().
 
 %---------------------------------------------------------------------------

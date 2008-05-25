@@ -1,7 +1,9 @@
 %% JSON-RPC for HTTP transports (inets, mochiweb, yaws, ...)
 %%---------------------------------------------------------------------------
-%% Copyright (c) 2007, 2008 Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
-%% Copyright (c) 2007, 2008 LShift Ltd. <query@lshift.net>
+%% @author Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
+%% @author LShift Ltd. <query@lshift.net>
+%% @copyright 2007, 2008 Tony Garnock-Jones and LShift Ltd.
+%% @license
 %%
 %% Permission is hereby granted, free of charge, to any person
 %% obtaining a copy of this software and associated documentation
@@ -23,12 +25,65 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 %%---------------------------------------------------------------------------
+%% @since 1.2.0
+%%
+%% @doc General JSON-RPC HTTP transport support.
+%%
+%% Used by the Inets HTTP transport library, {@link
+%% rfc4627_jsonrpc_inets}.
 
 -module(rfc4627_jsonrpc_http).
 -include("rfc4627_jsonrpc.hrl").
 
 -export([invoke_service_method/4]).
 
+%% @spec (AliasPrefix, Path, RequestInfo, Body) -> Result
+%% where AliasPrefix = default | string()
+%%       Path = string()
+%%       RequestInfo = rfc4627:jsonobj()
+%%       Body = string() | binary()
+%%       Result = no_match | {ok, string(), jsonobj()}
+%%
+%% @doc Uses `AliasPrefix', `RequestInfo', `Path' and `Body' to locate
+%% and invoke a service procedure.
+%%
+%% If `AliasPrefix' is `default', the default prefix `"/jsonrpc"' is used.
+%%
+%% `Path' is expected to be the "path" part of the request URI: a string of the form "/.../prefix/objectname[/methodname]".
+%%
+%% `RequestInfo' is a JSON "object" containing HTTP-specific request information:
+%%
+%% <ul>
+%% <li>`http_method' should be either `<<"GET">>' (the default) or `<<"POST">>'</li>
+%% <li>`http_query_parameters' should be the query parameters (the part of the URL after "?")
+%%     decoded into a JSON "object", with one field per parameter</li>
+%% <li>`http_headers' should be a JSON "object" containing the HTTP request headers</li>
+%% <li>`scheme' should be either `<<"http">>' or `<<"https">>'</li>
+%% <li>`remote_port' should be the TCP port number of the remote peer</li>
+%% <li>`remote_peername' should be a {@type binary()} containing the IP address of the
+%%     remote peer, in a form acceptable to {@link inet:gethostbyaddr/1}</li>
+%% </ul>
+%%
+%% All the fields in `RequestInfo' are optional.
+%%
+%% `Body' must be either a {@type binary()} or a {@type string()}
+%% containing the HTTP request body.
+%%
+%% Operation proceeds as follows. `Path' is first matched against
+%% `AliasPrefix'. If it does not match, `no_match' is
+%% returned. Otherwise, the matching prefix is stripped from the path,
+%% and extraction of the service name, method name, and parameters from
+%% the HTTP request proceeds as per the JSON-RPC specification,
+%% [http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ProcedureCall].
+%%
+%% Once the service name, method name and parameters are known, The
+%% service is looked up with {@link rfc4627_jsonrpc:lookup_service/1},
+%% and the named method is invoked with {@link
+%% rfc4627_jsonrpc:invoke_service_method/8}.
+%%
+%% The final result is encoded into a list of bytes using {@link
+%% rfc4627:encode/1}, and returned along with the `ResponseInfo' to
+%% our caller.
 invoke_service_method(default, Path, RequestInfo, Body) ->
     invoke_service_method("/jsonrpc", Path, RequestInfo, Body);
 invoke_service_method(AliasPrefix, Path, RequestInfo, Body) ->

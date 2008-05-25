@@ -16,7 +16,6 @@ objects.
 
 <p><b>Introduced in:</b> 1.2.0
  </p>
-<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
 <p><b>Authors:</b> Tony Garnock-Jones (<a href="mailto:tonyg@kcbbs.gen.nz"><tt>tonyg@kcbbs.gen.nz</tt></a>), LShift Ltd. (<a href="mailto:query@lshift.net"><tt>query@lshift.net</tt></a>).</p>
 <p><b>References</b><ul><li>the <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC specification</a> (draft)
  </li></ul></p>
@@ -205,15 +204,10 @@ specification.</p>
  </p>
 
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>gen_server behaviour callback.</td></tr>
-<tr><td valign="top"><a href="#error_response-2">error_response/2</a></td><td>Constructs an error response as per the JSON-RPC specification.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#error_response-2">error_response/2</a></td><td>Constructs an error response as per the JSON-RPC specification.</td></tr>
 <tr><td valign="top"><a href="#error_response-3">error_response/3</a></td><td>Constructs an error response as per the JSON-RPC specification.</td></tr>
 <tr><td valign="top"><a href="#expand_jsonrpc_reply-2">expand_jsonrpc_reply/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#gen_object_name-0">gen_object_name/0</a></td><td>Generates a unique name that can be used for otherwise unnamed JSON-RPC services.</td></tr>
-<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>gen_server behaviour callback.</td></tr>
-<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>gen_server behaviour callback.</td></tr>
-<tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>gen_server behaviour callback.</td></tr>
-<tr><td valign="top"><a href="#init-1">init/1</a></td><td>gen_server behaviour callback.</td></tr>
 <tr><td valign="top"><a href="#invoke_service_method-8">invoke_service_method/8</a></td><td>Calls a method defined on a JSON-RPC service.</td></tr>
 <tr><td valign="top"><a href="#jsonrpc_post-3">jsonrpc_post/3</a></td><td>Calls <a href="#jsonrpc_post-4"><code>jsonrpc_post/4</code></a> with a <code>Timeout</code> of <code>default</code>.</td></tr>
 <tr><td valign="top"><a href="#jsonrpc_post-4">jsonrpc_post/4</a></td><td>Performs a POST-style invocation of a JSON-RPC service method.</td></tr>
@@ -223,18 +217,12 @@ specification.</p>
 <tr><td valign="top"><a href="#service-4">service/4</a></td><td>Constructs a service description record.</td></tr>
 <tr><td valign="top"><a href="#service-5">service/5</a></td><td>As for <a href="#service-4"><code>service/4</code></a>, but supplying a handler for use with
   an experimental "stateless" service implementation.</td></tr>
-<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Starts the registry service.</td></tr>
-<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td>Starts the registry service, linking it to the calling process.</td></tr>
+<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Starts the registry process.</td></tr>
+<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td>Starts the registry process, linking it to the calling process.</td></tr>
 <tr><td valign="top"><a href="#system_describe-2">system_describe/2</a></td><td>Builds a JSON-RPC service description JSON object.</td></tr>
-<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>gen_server behaviour callback.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
-
-<h3 class="function"><a name="code_change-3">code_change/3</a></h3>
-<div class="spec">
-<p><tt>code_change() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
 
 <h3 class="function"><a name="error_response-2">error_response/2</a></h3>
 <div class="spec">
@@ -268,26 +256,6 @@ describing the error as text.</p>
 <div class="spec">
 <p><tt>gen_object_name() -&gt; string()</tt></p>
 </div><p>Generates a unique name that can be used for otherwise unnamed JSON-RPC services.</p>
-
-<h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
-<div class="spec">
-<p><tt>handle_call() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
-
-<h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
-<div class="spec">
-<p><tt>handle_cast() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
-
-<h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
-<div class="spec">
-<p><tt>handle_info() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
-
-<h3 class="function"><a name="init-1">init/1</a></h3>
-<div class="spec">
-<p><tt>init() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
 
 <h3 class="function"><a name="invoke_service_method-8">invoke_service_method/8</a></h3>
 <div class="spec">
@@ -406,12 +374,12 @@ JSON-RPC specification.</p>
 <h3 class="function"><a name="start-0">start/0</a></h3>
 <div class="spec">
 <p><tt>start() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt></p>
-</div><p>Starts the registry service.</p>
+</div><p>Starts the registry process.</p>
 
 <h3 class="function"><a name="start_link-0">start_link/0</a></h3>
 <div class="spec">
 <p><tt>start_link() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt></p>
-</div><p>Starts the registry service, linking it to the calling process.</p>
+</div><p>Starts the registry process, linking it to the calling process.</p>
 
 <h3 class="function"><a name="system_describe-2">system_describe/2</a></h3>
 <div class="spec">
@@ -426,11 +394,6 @@ specification to support.</p>
   in the resulting description. Otherwise, it is included
   verbatim. The other fields in the description are constructed using
   the information in the <code>Service</code> record.</p>
-
-<h3 class="function"><a name="terminate-2">terminate/2</a></h3>
-<div class="spec">
-<p><tt>terminate() -&gt; term()</tt></p>
-</div><p>gen_server behaviour callback.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>

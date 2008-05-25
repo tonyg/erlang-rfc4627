@@ -218,10 +218,7 @@
 -include("rfc4627.hrl").
 -include("rfc4627_jsonrpc.hrl").
 
--behaviour(gen_server).
-
 -export([start/0, start_link/0]).
--export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 
 -export([lookup_service/1, register_service/2]).
 -export([gen_object_name/0, system_describe/2]).
@@ -231,14 +228,14 @@
 -define(SERVICE, ?MODULE).
 
 %% @spec () -> {ok, pid()} | {error, {already_started, pid()}}
-%% @doc Starts the registry service.
+%% @doc Starts the registry process.
 start() ->
-    gen_server:start({local, ?SERVICE}, ?MODULE, [], []).
+    gen_server:start({local, ?SERVICE}, rfc4627_jsonrpc_registry, [], []).
 
 %% @spec () -> {ok, pid()} | {error, {already_started, pid()}}
-%% @doc Starts the registry service, linking it to the calling process.
+%% @doc Starts the registry process, linking it to the calling process.
 start_link() ->
-    gen_server:start_link({local, ?SERVICE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVICE}, rfc4627_jsonrpc_registry, [], []).
 
 %% @spec (binary()) -> not_found | service()
 %% @doc Calls the registry to look up a service by name.
@@ -555,51 +552,3 @@ system_describe_proc(P = #service_proc{params = Params}) ->
 
 system_describe_proc_param(P = #service_proc_param{}) ->
     remove_undefined(?RFC4627_FROM_RECORD(service_proc_param, P)).
-
-%---------------------------------------------------------------------------
-
-%% @doc gen_server behaviour callback.
-init(_Args) ->
-    {ok, no_jsonrpc_state}.
-
-%% @doc gen_server behaviour callback.
-terminate(_Reason, _State) ->
-    %% FIXME: should we notify services here?
-    ok.
-
-%% @doc gen_server behaviour callback.
-code_change(_OldVsn, State, _Extra) ->
-    State.
-
-%% @doc gen_server behaviour callback.
-handle_call({lookup_service, Service}, _From, State) ->
-    case get({service, Service}) of
-	undefined ->
-	    {reply, not_found, State};
-	ServiceRec ->
-	    {reply, ServiceRec, State}
-    end;
-
-handle_call({register_service, Pid, ServiceDescription}, _From, State) ->
-    SD = ServiceDescription#service{handler = {pid, Pid}},
-    erlang:monitor(process, Pid),
-    put({service_pid, Pid}, SD#service.name),
-    put({service, SD#service.name}, SD),
-    {reply, ok, State}.
-
-%% @doc gen_server behaviour callback.
-handle_cast(Request, State) ->
-    error_logger:error_msg("Unhandled cast in ~p: ~p", [?MODULE, Request]),
-    {noreply, State}.
-
-%% @doc gen_server behaviour callback.
-handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
-    case get({service_pid, DownPid}) of
-	undefined ->
-	    %% How strange.
-	    {noreply, State};
-	ServiceName ->
-	    erase({service_pid, DownPid}),
-	    erase({service, ServiceName}),
-	    {noreply, State}
-    end.

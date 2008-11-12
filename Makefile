@@ -18,8 +18,11 @@ endif
 
 all: $(TARGETS)
 
-$(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
+$(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(EBIN_DIR) $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
+
+$(EBIN_DIR):
+	mkdir $(EBIN_DIR)
 
 clean:
 	rm -f ebin/*.beam

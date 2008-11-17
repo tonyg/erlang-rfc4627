@@ -349,6 +349,7 @@ parse("false" ++ Rest) -> {false, Rest};
 parse("null" ++ Rest) -> {null, Rest};
 parse([${ | Rest]) -> parse_object(skipws(Rest), []);
 parse([$[ | Rest]) -> parse_array(skipws(Rest), []);
+parse([]) -> exit(unexpected_end_of_input);
 parse(Chars) -> parse_number(Chars, []).
 
 skipws([X | Rest]) when X =< 32 ->
@@ -440,12 +441,13 @@ finish_number(Acc, Rest) ->
 	 Value -> Value
      end, Rest}.
 
-parse_number([], _Acc) ->
-    exit(syntax_error);
 parse_number([$- | Rest], Acc) ->
     parse_number1(Rest, [$- | Acc]);
-parse_number(Rest, Acc) ->
-    parse_number1(Rest, Acc).
+parse_number(Rest = [C | _], Acc) ->
+    case is_digit(C) of
+	true -> parse_number1(Rest, Acc);
+	false -> exit(syntax_error)
+    end.
 
 parse_number1(Rest, Acc) ->
     {Acc1, Rest1} = parse_int_part(Rest, Acc),

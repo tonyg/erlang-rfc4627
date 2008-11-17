@@ -36,6 +36,7 @@ test_all() ->
     passed = test_records(),
     passed = test_unicode(),
     passed = test_equiv(),
+    passed = test_eof_detection(),
     passed.
 
 test_codec() ->
@@ -166,4 +167,9 @@ test_equiv() ->
     false = rfc4627:equiv(<<"ab">>, <<"a">>),
     true = rfc4627:equiv(<<>>, <<>>),
 
+    passed.
+
+test_eof_detection() ->
+    {error, unexpected_end_of_input} = rfc4627:decode(""),
+    {error, syntax_error} = rfc4627:decode("()"),
     passed.

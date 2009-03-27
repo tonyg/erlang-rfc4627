@@ -149,6 +149,8 @@ encode_noauto(Num, Acc) when is_number(Num) ->
     encode_number(Num, Acc);
 encode_noauto({obj, Fields}, Acc) ->
     "}" ++ encode_object(Fields, "{" ++ Acc);
+encode_noauto(Dict, Acc) when element(1, Dict) =:= dict ->
+    "}" ++ encode_object(dict:to_list(Dict), "{" ++ Acc);
 encode_noauto(Arr, Acc) when is_list(Arr) ->
     "]" ++ encode_array(Arr, "[" ++ Acc).
 

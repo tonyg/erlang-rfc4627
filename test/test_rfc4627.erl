@@ -34,6 +34,7 @@
 test_all() ->
     passed = test_codec(),
     passed = test_records(),
+    passed = test_dict(),
     passed = test_unicode(),
     passed = test_equiv(),
     passed = test_eof_detection(),
@@ -144,6 +145,17 @@ test_records() ->
 					   {"street", <<"Rufus Street">>},
 					   {"town", <<"London">>}]}),
     {ok, AEnc, []} = rfc4627:decode(rfc4627:encode(AEnc)),
+    passed.
+
+test_dict() ->
+    Dict = dict:append("c", 2,
+                       dict:append("c", 1,
+                                   dict:store("b", <<"hello">>,
+                                              dict:store("a", 123, dict:new())))),
+    {ok, Obj, ""} = rfc4627:decode(rfc4627:encode(Dict)),
+    {ok, 123} = rfc4627:get_field(Obj, "a"),
+    {ok, <<"hello">>} = rfc4627:get_field(Obj, "b"),
+    {ok, [1, 2]} = rfc4627:get_field(Obj, "c"),
     passed.
 
 test_equiv() ->

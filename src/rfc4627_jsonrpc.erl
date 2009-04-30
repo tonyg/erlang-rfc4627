@@ -27,7 +27,7 @@
 %%---------------------------------------------------------------------------
 %% @since 1.2.0
 %%
-%% @reference the <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC specification</a> (draft)
+%% @reference the <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC specification</a> (draft; <a href="JSON-RPC-1-1-WD-20060807.html">mirrored locally</a>)
 %%
 %% @doc Provides a registry of running JSON-RPC objects, and a
 %% transport-neutral means of invoking methods defined on such
@@ -88,7 +88,7 @@
 %% Registering a service is as simple as starting a process to receive
 %% service requests, and passing its pid to `rfc4627_jsonrpc' along
 %% with a <a
-%% href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ServiceDescription">service
+%% href="JSON-RPC-1-1-WD-20060807.html#ServiceDescription">service
 %% descriptor</a> object built from Erlang records defined in
 %% `mod_jsonrpc.hrl':
 %%
@@ -132,7 +132,7 @@
 %% in the appropriate place.
 %%
 %% The available types for parameters are the strings defined in <a
-%% href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ParameterReturnTypeStrings">this
+%% href="JSON-RPC-1-1-WD-20060807.html#ParameterReturnTypeStrings">this
 %% part</a> of the JSON-RPC specification, namely "bit", "num", "str",
 %% "arr", "obj", "any" or "nil". See also
 %% `rfc4627_jsonrpc:proc_param_type/1'.

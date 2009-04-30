@@ -74,7 +74,7 @@
 %% returned. Otherwise, the matching prefix is stripped from the path,
 %% and extraction of the service name, method name, and parameters from
 %% the HTTP request proceeds as per the JSON-RPC specification,
-%% [http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ProcedureCall].
+%% [JSON-RPC-1-1-WD-20060807.html#ProcedureCall].
 %%
 %% Once the service name, method name and parameters are known, The
 %% service is looked up with {@link rfc4627_jsonrpc:lookup_service/1},

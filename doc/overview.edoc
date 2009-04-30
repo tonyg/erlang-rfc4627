@@ -10,7 +10,8 @@ the JSON RFC
 
 @reference The <a
 href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC
-specification</a> 1.1 working draft.
+specification</a> 1.1 working draft (<a
+href="JSON-RPC-1-1-WD-20060807.html">mirrored locally</a>).
 
 @doc <p>An implementation of JSON and JSON-RPC for Erlang.</p>
 
@@ -25,11 +26,18 @@ expose Erlang processes as remotely-callable JSON-RPC services, and to
 learn how to invoke local JSON-RPC services from Erlang without the
 overhead of HTTP.
 
-== Exposing JSON-RPC services over HTTP using Inets ==
+== Exposing JSON-RPC services over HTTP ==
+
+=== Using Inets ===
 
 See {@link rfc4627_jsonrpc_inets}, an Inets HTTP transport binding for
 JSON-RPC, to learn how to configure the Inets HTTP server to respond
 to JSON-RPC requests.
+
+=== Using Mochiweb ===
+
+See {@link rfc4627_jsonrpc_mochiweb} to learn how to delegate incoming
+Mochiweb HTTP requests to the JSON-RPC service dispatcher.
 
 == Running the example test service that comes with the source code ==
 

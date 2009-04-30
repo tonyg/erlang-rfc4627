@@ -17,7 +17,7 @@ objects.
 <p><b>Introduced in:</b> 1.2.0
  </p>
 <p><b>Authors:</b> Tony Garnock-Jones (<a href="mailto:tonyg@kcbbs.gen.nz"><tt>tonyg@kcbbs.gen.nz</tt></a>), LShift Ltd. (<a href="mailto:query@lshift.net"><tt>query@lshift.net</tt></a>).</p>
-<p><b>References</b><ul><li>the <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC specification</a> (draft)
+<p><b>References</b><ul><li>the <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html">JSON-RPC specification</a> (draft; <a href="JSON-RPC-1-1-WD-20060807.html">mirrored locally</a>)
  </li></ul></p>
 
 <h2><a name="description">Description</a></h2><p>Provides a registry of running JSON-RPC objects, and a  
@@ -74,7 +74,7 @@ or if it was, it will inform you of the existing registry's Pid.</p>
  
   <p>Registering a service is as simple as starting a process to receive
   service requests, and passing its pid to <code>rfc4627_jsonrpc</code> along
-  with a <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ServiceDescription">service
+  with a <a href="JSON-RPC-1-1-WD-20060807.html#ServiceDescription">service
   descriptor</a> object built from Erlang records defined in
   <code>mod_jsonrpc.hrl</code>:</p>
  
@@ -114,7 +114,7 @@ represent JSON strings.</p>
   be defined by the addition of extra <code>#service_proc_param</code> records  
 in the appropriate place.</p>
  
-  <p>The available types for parameters are the strings defined in <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ParameterReturnTypeStrings">this
+  <p>The available types for parameters are the strings defined in <a href="JSON-RPC-1-1-WD-20060807.html#ParameterReturnTypeStrings">this
   part</a> of the JSON-RPC specification, namely "bit", "num", "str",
   "arr", "obj", "any" or "nil". See also
   <code>rfc4627_jsonrpc:proc_param_type/1</code>.</p>

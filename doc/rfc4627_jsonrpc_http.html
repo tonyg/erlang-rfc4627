@@ -61,11 +61,11 @@ and invoke a service procedure.</p>
 containing the HTTP request body.</p>
  
   <p>Operation proceeds as follows. <code>Path</code> is first matched against
-  <code>AliasPrefix</code>. If it does not match, <code>no_match</code> is
-  returned. Otherwise, the matching prefix is stripped from the path,
-  and extraction of the service name, method name, and parameters from
-  the HTTP request proceeds as per the JSON-RPC specification,
-  <a href="http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ProcedureCall" target="_top"><tt>http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html#ProcedureCall</tt></a>.</p>
+  <code>AliasPrefix</code>. If it does not match, <code>no_match</code> is  
+returned. Otherwise, the matching prefix is stripped from the path,  
+and extraction of the service name, method name, and parameters from  
+the HTTP request proceeds as per the JSON-RPC specification,  
+[JSON-RPC-1-1-WD-20060807.html#ProcedureCall].</p>
  
   <p>Once the service name, method name and parameters are known, The
   service is looked up with <a href="rfc4627_jsonrpc.html#lookup_service-1"><code>rfc4627_jsonrpc:lookup_service/1</code></a>,

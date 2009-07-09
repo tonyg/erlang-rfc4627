@@ -9,6 +9,8 @@ ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall +debug_info # +native -v
 DIST_DIR=dist
 SIGNING_KEY_ID=F8D7D525
 VERSION=1.2.0
+PACKAGE_NAME=erlang-rfc4627
+EZ_NAME=$(PACKAGE_NAME).ez
 
 ifeq ($(shell uname -s),Darwin)
 SED=gnused
@@ -27,11 +29,17 @@ $(EBIN_DIR):
 clean:
 	rm -f ebin/*.beam
 	rm -f $(TARGETS)
+	rm -rf $(DIST_DIR)
 	rm -f doc/*
 
 dist: all
 	mkdir -p $(DIST_DIR)
 	cp -r doc ebin include src test Makefile $(DIST_DIR)
+
+package: dist
+	mkdir -p $(DIST_DIR)/$(PACKAGE_NAME)
+	cp -r  $(DIST_DIR)/$(EBIN_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
+	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))
 
 distclean: clean
 	rm -rf $(DIST_DIR)

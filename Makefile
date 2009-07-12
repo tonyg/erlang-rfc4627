@@ -9,7 +9,7 @@ ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall +debug_info # +native -v
 DIST_DIR=dist
 SIGNING_KEY_ID=F8D7D525
 VERSION=1.2.0
-PACKAGE_NAME=erlang-rfc4627
+PACKAGE_NAME=rfc4627_jsonrpc
 EZ_NAME=$(PACKAGE_NAME).ez
 
 ifeq ($(shell uname -s),Darwin)

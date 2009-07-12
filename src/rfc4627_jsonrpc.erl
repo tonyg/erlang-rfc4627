@@ -218,6 +218,9 @@
 -include("rfc4627.hrl").
 -include("rfc4627_jsonrpc.hrl").
 
+-behaviour(application).
+-export([start/2,stop/1]).
+
 -export([start/0, start_link/0]).
 
 -export([lookup_service/1, register_service/2]).
@@ -226,6 +229,16 @@
 -export([error_response/2, error_response/3, service/4, service/5, proc/2]).
 
 -define(SERVICE, ?MODULE).
+
+%% @spec start(_Type, _StartArgs) -> ServerRet
+%% @doc application start callback for mod_http.
+start(_Type, _StartArgs) ->
+    start_link().
+
+%% @spec stop(_State) -> ServerRet
+%% @doc application stop callback for mod_http.
+stop(_State) ->
+    ok.
 
 %% @spec () -> {ok, pid()} | {error, {already_started, pid()}}
 %% @doc Starts the registry process.

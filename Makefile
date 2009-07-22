@@ -27,6 +27,8 @@ $(EBIN_DIR):
 clean:
 	rm -f ebin/*.beam
 	rm -f $(TARGETS)
+
+cleandoc:
 	rm -f doc/*
 
 dist: all

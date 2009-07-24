@@ -62,22 +62,20 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc gen_server behaviour callback.
 handle_call({lookup_service, Service}, _From, State) ->
-    Fun = fun() -> mnesia:read(?TABLE_NAME, {service, Service}) end,
-    case mnesia:transaction(Fun) of
-        {atomic, []} ->
+    case tx(lookup(service, Service)) of
+        none ->
             {reply, not_found, State};
-        {atomic, [{?TABLE_NAME, _, ServiceRec}]} ->
+        ServiceRec ->
             {reply, ServiceRec, State}
     end;
 
 handle_call({register_service, Pid, ServiceDescription}, _From, State) ->
     SD = ServiceDescription#service{handler = {pid, Pid}},
     erlang:monitor(process, Pid),
-    mnesia:transaction(
-        fun() ->
+    tx(fun() ->
             mnesia:write({?TABLE_NAME,{service_pid, Pid}, SD#service.name}),
             mnesia:write({?TABLE_NAME,{service, SD#service.name}, SD})
-        end),
+       end),
     {reply, ok, State}.
 
 %% @doc gen_server behaviour callback.
@@ -87,16 +85,25 @@ handle_cast(Request, State) ->
 
 %% @doc gen_server behaviour callback.
 handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
-    Fun = fun() -> mnesia:read(?TABLE_NAME, {service_pid, DownPid}) end,
-    case mnesia:transaction(Fun) of
-        {atomic, []} ->
+    case tx(lookup(service_pid, DownPid)) of
+        none ->
             {noreply, State};
-        {atomic, [{?TABLE_NAME, _, ServiceName}]} ->
-            mnesia:transaction(
-                fun() ->
-                    mnesia:delete({?TABLE_NAME,{service_pid, DownPid}}),
-                    mnesia:delete({?TABLE_NAME,{service, ServiceName}})
-                end),
+        ServiceName ->
+            tx(fun() ->
+                mnesia:delete({?TABLE_NAME,{service_pid, DownPid}}),
+                mnesia:delete({?TABLE_NAME,{service, ServiceName}})
+            end),
             {noreply, State}
+    end.
+
+lookup(Type, Key) ->
+    fun() -> mnesia:read(?TABLE_NAME, {Type, Key}) end.
+
+tx(Fun) ->
+    case mnesia:transaction(Fun) of
+        {atomic, []} -> none;
+        {atomic, ok} -> ok;
+        {atomic, abort} -> abort;
+        {atomic, [{?TABLE_NAME, _, X}]} -> X
     end.
 

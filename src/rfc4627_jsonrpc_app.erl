@@ -24,10 +24,9 @@
 %%
 -module(rfc4627_jsonrpc_app).
 
--export([start/0, stop/0, start/2, stop/1]).
+-export([start/2, stop/1]).
 
-start() -> application:start(?MODULE).
-stop() -> application:stop(?MODULE).
+-behaviour(application).
 
 start(normal, []) ->
     rfc4627_jsonrpc_sup:start_link().

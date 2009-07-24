@@ -30,6 +30,8 @@ clean:
 	rm -f ebin/*.beam
 	rm -f $(TARGETS)
 	rm -rf $(DIST_DIR)
+	
+cleandoc:
 	rm -f doc/*
 
 dist: all

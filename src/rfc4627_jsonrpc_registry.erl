@@ -39,8 +39,16 @@
 
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2, handle_info/2]).
 
+-define(TABLE_NAME, rfc4627_jsonrpc_registry).
+
 %% @doc gen_server behaviour callback.
 init(_Args) ->
+    case mnesia:create_table(?TABLE_NAME, [{attributes,[key, value]}]) of
+        {atomic,ok} ->
+            error_logger:error_msg("Creating new ETS table for ~p~n", [?MODULE]),
+            ok;
+        {aborted, {already_exists, ?TABLE_NAME}} -> ok
+    end,
     {ok, no_jsonrpc_state}.
 
 %% @doc gen_server behaviour callback.
@@ -54,18 +62,22 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc gen_server behaviour callback.
 handle_call({lookup_service, Service}, _From, State) ->
-    case get({service, Service}) of
-	undefined ->
-	    {reply, not_found, State};
-	ServiceRec ->
-	    {reply, ServiceRec, State}
+    Fun = fun() -> mnesia:read(?TABLE_NAME, {service, Service}) end,
+    case mnesia:transaction(Fun) of
+        {atomic, []} ->
+            {reply, not_found, State};
+        {atomic, [{?TABLE_NAME, _, ServiceRec}]} ->
+            {reply, ServiceRec, State}
     end;
 
 handle_call({register_service, Pid, ServiceDescription}, _From, State) ->
     SD = ServiceDescription#service{handler = {pid, Pid}},
     erlang:monitor(process, Pid),
-    put({service_pid, Pid}, SD#service.name),
-    put({service, SD#service.name}, SD),
+    mnesia:transaction(
+        fun() ->
+            mnesia:write({?TABLE_NAME,{service_pid, Pid}, SD#service.name}),
+            mnesia:write({?TABLE_NAME,{service, SD#service.name}, SD})
+        end),
     {reply, ok, State}.
 
 %% @doc gen_server behaviour callback.
@@ -75,12 +87,16 @@ handle_cast(Request, State) ->
 
 %% @doc gen_server behaviour callback.
 handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
-    case get({service_pid, DownPid}) of
-	undefined ->
-	    %% How strange.
-	    {noreply, State};
-	ServiceName ->
-	    erase({service_pid, DownPid}),
-	    erase({service, ServiceName}),
-	    {noreply, State}
+    Fun = fun() -> mnesia:read(?TABLE_NAME, {service_pid, DownPid}) end,
+    case mnesia:transaction(Fun) of
+        {atomic, []} ->
+            {noreply, State};
+        {atomic, [{?TABLE_NAME, _, ServiceName}]} ->
+            mnesia:transaction(
+                fun() ->
+                    mnesia:delete({?TABLE_NAME,{service_pid, DownPid}}),
+                    mnesia:write({?TABLE_NAME,{service, ServiceName}})
+                end),
+            {noreply, State}
     end.
+

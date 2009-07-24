@@ -45,7 +45,7 @@
 init(_Args) ->
     case mnesia:create_table(?TABLE_NAME, [{attributes,[key, value]}]) of
         {atomic,ok} ->
-            error_logger:error_msg("Creating new ETS table for ~p~n", [?MODULE]),
+            error_logger:error_msg("Creating new mnesia table for ~p~n", [?MODULE]),
             ok;
         {aborted, {already_exists, ?TABLE_NAME}} -> ok
     end,
@@ -95,7 +95,7 @@ handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
             mnesia:transaction(
                 fun() ->
                     mnesia:delete({?TABLE_NAME,{service_pid, DownPid}}),
-                    mnesia:write({?TABLE_NAME,{service, ServiceName}})
+                    mnesia:delete({?TABLE_NAME,{service, ServiceName}})
                 end),
             {noreply, State}
     end.

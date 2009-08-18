@@ -18,7 +18,7 @@ else
 SED=sed
 endif
 
-all: $(TARGETS)
+all: package
 
 $(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(EBIN_DIR) $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
@@ -34,11 +34,12 @@ clean:
 cleandoc:
 	rm -f doc/*
 
-dist: all
+dist: $(TARGETS)
 	mkdir -p $(DIST_DIR)
 	cp -r doc ebin include src test Makefile $(DIST_DIR)
 
-package: dist
+package: $(DIST_DIR)/$(PACKAGE).ez
+$(DIST_DIR)/$(PACKAGE).ez: $(TARGETS) dist
 	mkdir -p $(DIST_DIR)/$(PACKAGE_NAME)
 	cp -r  $(DIST_DIR)/$(EBIN_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
 	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))

@@ -20,17 +20,14 @@ endif
 
 all: package
 
-$(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(EBIN_DIR) $(INCLUDES)
+$(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
-
-$(EBIN_DIR):
-	mkdir $(EBIN_DIR)
 
 clean:
 	rm -f ebin/*.beam
 	rm -f $(TARGETS)
 	rm -rf $(DIST_DIR)
-	
+
 cleandoc:
 	rm -f doc/*
 

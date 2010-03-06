@@ -38,7 +38,8 @@ dist: $(TARGETS)
 package: $(DIST_DIR)/$(PACKAGE).ez
 $(DIST_DIR)/$(PACKAGE).ez: $(TARGETS) dist
 	mkdir -p $(DIST_DIR)/$(PACKAGE_NAME)
-	cp -r  $(DIST_DIR)/$(EBIN_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
+	cp -r $(DIST_DIR)/$(EBIN_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
+	cp -r $(DIST_DIR)/$(INCLUDE_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
 	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))
 
 distclean: clean

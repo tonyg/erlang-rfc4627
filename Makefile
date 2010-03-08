@@ -42,6 +42,9 @@ $(DIST_DIR)/$(PACKAGE).ez: $(TARGETS) dist
 	cp -r $(DIST_DIR)/$(INCLUDE_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
 	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))
 
+echo-package-name:
+	echo $(PACKAGE_NAME)
+
 distclean: clean
 	rm -rf $(DIST_DIR)
 	find . -name '*~' -exec rm {} \;

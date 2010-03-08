@@ -43,7 +43,7 @@ $(DIST_DIR)/$(PACKAGE).ez: $(TARGETS) dist
 	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))
 
 echo-package-name:
-	echo $(PACKAGE_NAME)
+	@echo $(PACKAGE_NAME)
 
 distclean: clean
 	rm -rf $(DIST_DIR)

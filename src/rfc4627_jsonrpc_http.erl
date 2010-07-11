@@ -124,8 +124,8 @@ extract_timeout_header(HeadersJsonObj) ->
 
 extract_object_and_method(AliasPrefix, Path) ->
     AliasPrefixRe = "^" ++ AliasPrefix ++ "/",
-    case regexp:first_match(Path, AliasPrefixRe) of
-	{match, 1, Length} ->
+    case re:run(Path, AliasPrefixRe) of
+	{match, [{0, Length}]} ->
 	    ObjectMethod = string:substr(Path, Length + 1),
 	    case lists:reverse(string:tokens(ObjectMethod, "/")) of
 		[] -> {<<>>, <<>>};

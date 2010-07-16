@@ -1,8 +1,8 @@
 %% JSON-RPC, transport-neutral.
 %%---------------------------------------------------------------------------
-%% @author Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
+%% @author Tony Garnock-Jones <tonygarnockjones@gmail.com>
 %% @author LShift Ltd. <query@lshift.net>
-%% @copyright 2007, 2008 Tony Garnock-Jones and LShift Ltd.
+%% @copyright 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.
 %% @license
 %%
 %% Permission is hereby granted, free of charge, to any person

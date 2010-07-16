@@ -30,6 +30,7 @@ clean:
 	rm -f ebin/*.beam
 	rm -f $(TARGETS)
 	rm -rf $(DIST_DIR)
+	rm -rf $(DOC_DIR)
 
 dist: $(TARGETS) doc/index.html
 	mkdir -p $(DIST_DIR)

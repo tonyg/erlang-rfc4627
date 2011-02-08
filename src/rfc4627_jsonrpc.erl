@@ -515,6 +515,8 @@ run_handler({pid, Pid}, Name, RequestInfo, CoercedArgs, Timeout) ->
 run_handler({function, F}, Name, RequestInfo, CoercedArgs, _Timeout) ->
     F(Name, RequestInfo, CoercedArgs).
 
+coerce_args(_Params, undefined) ->
+    [];
 coerce_args(_Params, Args) when is_list(Args) ->
     Args;
 coerce_args(Params, {obj, Fields}) ->

@@ -164,11 +164,6 @@
 %% implementing process at all, the function object could process
 %% the request without sending any messages at all.
 %%
-%% At the moment, the `rfc4627_jsonrpc' service registry
-%% only allows registration of `gen_server'-based
-%% pid-style services; this restriction will be lifted in a future
-%% release.
-%%
 %% To build a service descriptor object with a function handler
 %% instead of a pid, call `rfc4627_jsonrpc:service/5'
 %% instead of `rfc4627_jsonrpc:service/4':
@@ -180,7 +175,8 @@
 %% my_handler(ProcedureNameBin, RequestInfo, Args) -> jsonrpc_response()
 %% '''
 %%
-%% The resulting service descriptor can be used directly with {@link
+%% The resulting service descriptor can be registered with {@link
+%% register_service/1} as well as used directly with {@link
 %% invoke_service_method/8}.
 %%
 %% @type service() = #service{}. A service description record, as
@@ -220,7 +216,7 @@
 
 -export([start/0, start_link/0]).
 
--export([lookup_service/1, register_service/2]).
+-export([lookup_service/1, register_service/1, register_service/2]).
 -export([gen_object_name/0, system_describe/2]).
 -export([jsonrpc_post/3, jsonrpc_post/4, invoke_service_method/8, expand_jsonrpc_reply/2]).
 -export([error_response/2, error_response/3, service/4, service/5, proc/2]).
@@ -242,12 +238,18 @@ start_link() ->
 lookup_service(Service) ->
     gen_server:call(?SERVICE, {lookup_service, Service}).
 
+%% @spec (service()) -> ok
+%% @doc Registers a JSON-RPC service.
+%%
+%% The name of the service is contained within its service record.
+register_service(ServiceDescription) ->
+    gen_server:call(?SERVICE, {register_service, ServiceDescription}).
+
 %% @spec (pid(), service()) -> ok
 %% @doc Registers a JSON-RPC service.
 %%
 %% The name of the service is contained within its service record.
 register_service(Pid, ServiceDescription) ->
-    %%error_logger:info_msg("Registering ~p as ~p", [Pid, ServiceDescription]),
     gen_server:call(?SERVICE, {register_service, Pid, ServiceDescription}).
 
 %% @spec () -> string()
@@ -498,7 +500,6 @@ invoke_service(post, Handler, RequestInfo, ServiceProc, Args, Timeout) ->
     invoke_service1(Handler, RequestInfo, ServiceProc, Args, Timeout).
 
 invoke_service1(Handler, RequestInfo, #service_proc{name = Name, params = Params}, Args, Timeout) ->
-    %%error_logger:info_msg("JSONRPC invoking ~p:~p(~p)", [Handler, Name, Args]),
     case catch run_handler(Handler, Name, RequestInfo, coerce_args(Params, Args), Timeout) of
 	{'EXIT', {{function_clause, _}, _}} ->
 	    error_response(404, "Undefined procedure", Name);

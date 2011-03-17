@@ -64,6 +64,10 @@ handle_call({lookup_service, Service}, _From, State) ->
             {reply, ServiceRec, State}
     end;
 
+handle_call({register_service, ServiceDescription = #service{name = Name}}, _From, State) ->
+    ets:insert(?TABLE_NAME, {{service, Name}, ServiceDescription}),
+    {reply, ok, State};
+
 handle_call({register_service, Pid, ServiceDescription = #service{name = Name}}, _From, State) ->
     SD = ServiceDescription#service{handler = {pid, Pid}},
     erlang:monitor(process, Pid),

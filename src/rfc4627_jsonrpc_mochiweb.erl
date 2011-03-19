@@ -99,8 +99,17 @@ handle(AliasPrefix, Req) ->
 	no_match ->
 	    no_match;
 	{ok, ResultEnc, ResponseInfo} ->
+            DefaultType = rfc4627:mime_type(),
+            RespType = case Req:accepts_content_type(DefaultType) of
+                           true -> DefaultType;
+                           false ->
+                               case Req:accepts_content_type("text/plain") of
+                                   true -> "text/plain";
+                                   false -> DefaultType
+                               end
+                       end,
 	    {obj, ResponseHeaderFields} =
 		rfc4627:get_field(ResponseInfo, "http_headers", {obj, []}),
 	    Headers = [{K, binary_to_list(V)} || {K,V} <- ResponseHeaderFields],
-	    {ok, {200, Headers ++ [{"Content-type", "text/plain"}], ResultEnc}}
+	    {ok, {200, Headers ++ [{"Content-type", RespType}], ResultEnc}}
     end.

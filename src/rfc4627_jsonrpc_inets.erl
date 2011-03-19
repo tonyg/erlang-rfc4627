@@ -161,7 +161,7 @@ do_rpc(#mod{init_data = #init_data{peername = {PeerPort, PeerName}},
 	    {proceed, [{response, {response,
 				   [{code, 200},
 				    {content_length, integer_to_list(length(ResultEnc))},
-				    {content_type, "text/plain"}%rfc4627:mime_type()}
+				    {content_type, rfc4627:mime_type()}
 				    | Headers],
 				   ResultEnc}} | OldData]}
     end.

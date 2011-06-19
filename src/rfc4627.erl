@@ -215,23 +215,9 @@ encode_utf16be_chars([B1, B2 | Rest], Acc) ->
 %% @spec (Nibble::integer()) -> char()
 %% @doc Returns the character code corresponding to Nibble.
 %%
-%% Nibble must be >=0 and =&lt;16.
-hex_digit(0) -> $0;
-hex_digit(1) -> $1;
-hex_digit(2) -> $2;
-hex_digit(3) -> $3;
-hex_digit(4) -> $4;
-hex_digit(5) -> $5;
-hex_digit(6) -> $6;
-hex_digit(7) -> $7;
-hex_digit(8) -> $8;
-hex_digit(9) -> $9;
-hex_digit(10) -> $A;
-hex_digit(11) -> $B;
-hex_digit(12) -> $C;
-hex_digit(13) -> $D;
-hex_digit(14) -> $E;
-hex_digit(15) -> $F.
+%% Nibble must be >=0 and =&lt;15.
+hex_digit(N) when is_integer(N), N >= 0, N =< 9 -> $0 + N;
+hex_digit(N) when is_integer(N), N >= 10, N =< 15 -> $A + N - 10.
 
 encode_number(Num, Acc) when is_integer(Num) ->
     lists:reverse(integer_to_list(Num), Acc);
@@ -411,30 +397,9 @@ parse_general_char($u, [D0, D1, D2, D3 | Rest]) ->
 %%
 %% Hexchar must be one of the characters `$0' through `$9', `$A'
 %% through `$F' or `$a' through `$f'.
-digit_hex($0) -> 0;
-digit_hex($1) -> 1;
-digit_hex($2) -> 2;
-digit_hex($3) -> 3;
-digit_hex($4) -> 4;
-digit_hex($5) -> 5;
-digit_hex($6) -> 6;
-digit_hex($7) -> 7;
-digit_hex($8) -> 8;
-digit_hex($9) -> 9;
-
-digit_hex($A) -> 10;
-digit_hex($B) -> 11;
-digit_hex($C) -> 12;
-digit_hex($D) -> 13;
-digit_hex($E) -> 14;
-digit_hex($F) -> 15;
-
-digit_hex($a) -> 10;
-digit_hex($b) -> 11;
-digit_hex($c) -> 12;
-digit_hex($d) -> 13;
-digit_hex($e) -> 14;
-digit_hex($f) -> 15.
+digit_hex(C) when is_integer(C), C >= $0, C =< $9 -> C - $0;
+digit_hex(C) when is_integer(C), C >= $A, C =< $F -> C - $A + 10;
+digit_hex(C) when is_integer(C), C >= $a, C =< $f -> C - $a + 10.
 
 finish_number(Acc, Rest) ->
     Str = lists:reverse(Acc),
@@ -494,16 +459,7 @@ parse_signed_int_part([$- | Rest], Acc) ->
 parse_signed_int_part(Rest, Acc) ->
     parse_int_part(Rest, Acc).
 
-is_digit($0) -> true;
-is_digit($1) -> true;
-is_digit($2) -> true;
-is_digit($3) -> true;
-is_digit($4) -> true;
-is_digit($5) -> true;
-is_digit($6) -> true;
-is_digit($7) -> true;
-is_digit($8) -> true;
-is_digit($9) -> true;
+is_digit(N) when is_integer(N) -> N >= $0 andalso N =< $9;
 is_digit(_) -> false.
 
 parse_object([$} | Rest], Acc) ->

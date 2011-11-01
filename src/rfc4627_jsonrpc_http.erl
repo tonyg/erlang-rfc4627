@@ -148,7 +148,7 @@ parse_jsonrpc(AliasPrefix, Path, HttpMethod, QueryParametersObj, Body) ->
 		     rfc4627:get_field(RequestObject, "id", null),
 		     Object,
 		     rfc4627:get_field(RequestObject, "method", undefined),
-		     rfc4627:get_field(RequestObject, "params", undefined)};
+		     rfc4627:get_field(RequestObject, "params", [])};
 		_ ->
 		    %% GET, presumably. We don't really care, here.
 		    {get,

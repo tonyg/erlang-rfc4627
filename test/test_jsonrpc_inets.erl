@@ -46,8 +46,12 @@ start() ->
 									    type = <<"str">>}]}])).
 
 start_httpd() ->
-    rfc4627_jsonrpc:start(),
-    httpd:start("test/server_root/conf/httpd.conf"),
+    ok = case rfc4627_jsonrpc:start() of
+             {ok, _JsonrpcPid} -> ok;
+             {error, {already_started, _JsonrpcPid}} -> ok
+         end,
+    ok = inets:start(),
+    {ok, _HttpdPid} = inets:start(httpd, [{file, "test/server_root/conf/httpd.conf"}]),
     start().
 
 %---------------------------------------------------------------------------

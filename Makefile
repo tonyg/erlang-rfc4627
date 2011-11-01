@@ -10,7 +10,6 @@ DIST_DIR=dist
 SIGNING_KEY_ID=F8D7D525
 VERSION=HEAD
 PACKAGE_NAME=rfc4627_jsonrpc
-EZ_NAME=$(PACKAGE_NAME).ez
 
 ## The path to httpd.hrl has changed in OTP R14A and newer. Detect the
 ## change, and supply a compile-time macro definition to allow
@@ -21,7 +20,7 @@ else
 INETS_DEF=-Dnew_inets
 endif
 
-all: package
+all: $(TARGETS)
 
 $(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
@@ -32,19 +31,9 @@ clean:
 	rm -rf $(DIST_DIR)
 	rm -rf $(DOC_DIR)
 
-dist: $(TARGETS) doc/index.html
+dist: all doc/index.html
 	mkdir -p $(DIST_DIR)
 	cp -r doc ebin include src test Makefile $(DIST_DIR)
-
-package: $(DIST_DIR)/$(PACKAGE).ez
-$(DIST_DIR)/$(PACKAGE).ez: $(TARGETS) dist
-	mkdir -p $(DIST_DIR)/$(PACKAGE_NAME)
-	cp -r $(DIST_DIR)/$(EBIN_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
-	cp -r $(DIST_DIR)/$(INCLUDE_DIR) $(DIST_DIR)/$(PACKAGE_NAME)
-	(cd $(DIST_DIR); zip -r $(EZ_NAME) $(PACKAGE_NAME))
-
-echo-package-name:
-	@echo $(PACKAGE_NAME)
 
 distclean: clean
 	rm -rf $(DIST_DIR)

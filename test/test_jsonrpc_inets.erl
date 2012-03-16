@@ -43,7 +43,10 @@ start() ->
 			       [#service_proc{name = <<"test_proc">>,
 					      idempotent = true,
 					      params = [#service_proc_param{name = <<"value">>,
-									    type = <<"str">>}]}])).
+									    type = <<"str">>}]},
+                                #service_proc{name = <<"crash">>,
+					      idempotent = false,
+					      params = []}])).
 
 start_httpd() ->
     ok = case rfc4627_jsonrpc:start() of
@@ -66,7 +69,9 @@ code_change(_OldVsn, State, _Extra) ->
     State.
 
 handle_call({jsonrpc, <<"test_proc">>, _ModData, [Value]}, _From, State) ->
-    {reply, {result, <<"ErlangServer: ", Value/binary>>}, State}.
+    {reply, {result, <<"ErlangServer: ", Value/binary>>}, State};
+handle_call({jsonrpc, <<"crash">>, _ModData, []}, _From, _State) ->
+    exit(deliberate_crash).
 
 handle_cast(Request, State) ->
     error_logger:error_msg("Unhandled cast in test_jsonrpc: ~p", [Request]),

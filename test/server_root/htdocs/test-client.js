@@ -11,4 +11,5 @@ function testMain() {
     function onReady() {
 	testService.test_proc("Hello, world!").addCallback(log);
     }
+    Event.observe($("crashButton"), "click", function () { testService.crash() });
 }

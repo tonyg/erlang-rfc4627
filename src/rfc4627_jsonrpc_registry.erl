@@ -85,7 +85,7 @@ handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
     case ets:lookup(?TABLE_NAME, {service_pid, DownPid}) of
         [] ->
             {noreply, State};
-        [ServiceName] ->
+        [{_, ServiceName}] ->
             ets:delete(?TABLE_NAME, {service_pid, DownPid}),
             ets:delete(?TABLE_NAME, {service, ServiceName}),
             {noreply, State}

@@ -11,15 +11,15 @@ SIGNING_KEY_ID=F8D7D525
 VERSION=HEAD
 PACKAGE_NAME=rfc4627_jsonrpc
 
-## The path to httpd.hrl changed sometime between OTP R12 and R13B03,
-## and then changed again between OTP R14B and R14B01. Detect the
-## changes, and supply compile-time macro definitions to allow
-## rfc4627_jsonrpc_inets.erl to adapt to the new paths.
+## The path to httpd.hrl changed at R14A, and then changed again
+## between OTP R14B and R14B01. Detect the changes, and supply
+## compile-time macro definitions to allow rfc4627_jsonrpc_inets.erl
+## to adapt to the new paths.
 ERLANG_OTP_RELEASE:=$(shell erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().')
 $(info Building for OTP release $(ERLANG_OTP_RELEASE).)
-ifeq ($(shell test R13B03 \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
-$(info Using path to INETS httpd.hrl that existed before R13B03.)
-INETS_DEF=-Dinets_pre_r13b03
+ifeq ($(shell test R14A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
+$(info Using path to INETS httpd.hrl that existed before R14A.)
+INETS_DEF=-Dinets_pre_r14a
 else
 ifeq ($(shell test R14B01 \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
 $(info Using path to INETS httpd.hrl that existed before R14B01.)

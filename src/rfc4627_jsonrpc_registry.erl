@@ -53,7 +53,7 @@ terminate(_Reason, _State) ->
 
 %% @doc gen_server behaviour callback.
 code_change(_OldVsn, State, _Extra) ->
-    State.
+    {ok, State}.
 
 %% @doc gen_server behaviour callback.
 handle_call({lookup_service, Service}, _From, State) ->

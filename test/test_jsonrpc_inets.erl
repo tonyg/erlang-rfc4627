@@ -66,7 +66,7 @@ terminate(_Reason, _State) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
-    State.
+    {ok, State}.
 
 handle_call({jsonrpc, <<"test_proc">>, _ModData, [Value]}, _From, State) ->
     {reply, {result, <<"ErlangServer: ", Value/binary>>}, State};

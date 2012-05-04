@@ -38,6 +38,7 @@ test_all() ->
     passed = test_unicode(),
     passed = test_equiv(),
     passed = test_eof_detection(),
+    passed = test_exclude(),
     passed.
 
 test_codec() ->
@@ -156,6 +157,21 @@ test_dict() ->
     {ok, 123} = rfc4627:get_field(Obj, "a"),
     {ok, <<"hello">>} = rfc4627:get_field(Obj, "b"),
     {ok, [1, 2]} = rfc4627:get_field(Obj, "c"),
+    passed.
+
+test_exclude() ->
+    Dict = dict:store("c", 2,
+                        dict:store("b", <<"hello">>,
+                            dict:store("a", 123, dict:new()))),
+    {ok, Obj, ""} = rfc4627:decode(rfc4627:encode(Dict)),
+    Obj2 = rfc4627:exclude_field(Obj, "a"),
+    true = rfc4627:equiv({obj, [{"c", 2}, {"b", <<"hello">>}]}, Obj2),
+    Obj3 = rfc4627:exclude_field(Obj2, "b"),
+    true = rfc4627:equiv({obj, [{"c", 2}]}, Obj3),
+    Obj4 = rfc4627:exclude_field(Obj3, "x"),
+    true = rfc4627:equiv({obj, [{"c", 2}]}, Obj4),
+    Obj5 = rfc4627:exclude_field(Obj3, "c"),
+    true = rfc4627:equiv({obj, []}, Obj5),
     passed.
 
 test_equiv() ->

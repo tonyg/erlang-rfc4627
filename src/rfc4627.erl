@@ -526,7 +526,7 @@ decode_record_fields(Values, Fallback, Index, [Field | Rest]) ->
 	     element(Index, Fallback)
      end | decode_record_fields(Values, Fallback, Index + 1, Rest)].
 
-%% @spec (JsonOnbect::jsonobj(), atom()) -> jsononj()
+%% @spec (JsonObject::jsonobj(), atom()) -> jsonobj()
 %% @doc Exclude a named field from a JSON "object".
 exclude_field({obj, Props}, Key) ->
     {obj, lists:keydelete(Key, 1, Props)}.

@@ -1,6 +1,6 @@
 %% JSON - RFC 4627 - for Erlang
 %%---------------------------------------------------------------------------
-%% Copyright (c) 2007-2010 Tony Garnock-Jones <tonygarnockjones@gmail.com>
+%% Copyright (c) 2007-2010, 2011, 2012 Tony Garnock-Jones <tonygarnockjones@gmail.com>
 %% Copyright (c) 2007-2010 LShift Ltd. <query@lshift.net>
 %%
 %% Permission is hereby granted, free of charge, to any person

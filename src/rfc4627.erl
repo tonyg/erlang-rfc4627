@@ -32,7 +32,7 @@
 %% @reference <a href="http://www.json.org/">JSON in general</a>
 %%
 %% @reference Joe Armstrong's <a
-%% href="http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html">
+%% href="http://erlang.org/pipermail/erlang-questions/2005-November/017805.html">
 %% message</a> describing the basis of the JSON data type mapping that
 %% this module uses
 %%

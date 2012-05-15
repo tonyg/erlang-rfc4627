@@ -110,6 +110,10 @@ handle(AliasPrefix, Req) ->
                        end,
 	    {obj, ResponseHeaderFields} =
 		rfc4627:get_field(ResponseInfo, "http_headers", {obj, []}),
+			
+		StatusCode = 
+		rfc4627:get_field(ResponseInfo, "http_status_code", 200),
+
 	    Headers = [{K, binary_to_list(V)} || {K,V} <- ResponseHeaderFields],
-	    {ok, {200, Headers ++ [{"Content-type", RespType}], ResultEnc}}
+	    {ok, {StatusCode, Headers ++ [{"Content-type", RespType}], ResultEnc}}
     end.

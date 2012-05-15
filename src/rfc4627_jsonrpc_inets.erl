@@ -161,9 +161,13 @@ do_rpc(#mod{init_data = #init_data{peername = {PeerPort, PeerName}},
 	{ok, ResultEnc, ResponseInfo} ->
 	    {obj, ResponseHeaderFields} =
 		rfc4627:get_field(ResponseInfo, "http_headers", {obj, []}),
+		
+		StatusCode = 
+		rfc4627:get_field(ResponseInfo, "http_status_code", 200),
+		
 	    Headers = [{K, binary_to_list(V)} || {K,V} <- ResponseHeaderFields],
 	    {proceed, [{response, {response,
-				   [{code, 200},
+				   [{code, StatusCode},
 				    {content_length, integer_to_list(length(ResultEnc))},
 				    {content_type, rfc4627:mime_type()}
 				    | Headers],

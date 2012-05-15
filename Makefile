@@ -11,13 +11,23 @@ SIGNING_KEY_ID=F8D7D525
 VERSION=HEAD
 PACKAGE_NAME=rfc4627_jsonrpc
 
-## The path to httpd.hrl has changed in OTP R14A and newer. Detect the
-## change, and supply a compile-time macro definition to allow
-## rfc4627_jsonrpc_inets.erl to adapt to the new path.
-ifeq ($(shell test R14A \> $$(erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().') && echo yes),yes)
-INETS_DEF=
+## The path to httpd.hrl changed at R14A, and then changed again
+## between OTP R14B and R14B01. Detect the changes, and supply
+## compile-time macro definitions to allow rfc4627_jsonrpc_inets.erl
+## to adapt to the new paths.
+ERLANG_OTP_RELEASE:=$(shell erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().')
+$(info Building for OTP release $(ERLANG_OTP_RELEASE).)
+ifeq ($(shell test R14A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
+$(info Using path to INETS httpd.hrl that existed before R14A.)
+INETS_DEF=-Dinets_pre_r14a
 else
-INETS_DEF=-Dnew_inets
+ifeq ($(shell test R14B01 \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
+$(info Using path to INETS httpd.hrl that existed before R14B01.)
+INETS_DEF=-Dinets_pre_r14b01
+else
+$(info Using path to INETS httpd.hrl that exists in releases at and after R14B01.)
+INETS_DEF=
+endif
 endif
 
 all: $(TARGETS)

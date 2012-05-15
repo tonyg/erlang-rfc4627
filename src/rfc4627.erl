@@ -2,7 +2,7 @@
 %%---------------------------------------------------------------------------
 %% @author Tony Garnock-Jones <tonygarnockjones@gmail.com>
 %% @author LShift Ltd. <query@lshift.net>
-%% @copyright 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.
+%% @copyright 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.
 %% @license
 %%
 %% Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@
 %% @reference <a href="http://www.json.org/">JSON in general</a>
 %%
 %% @reference Joe Armstrong's <a
-%% href="http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html">
+%% href="http://erlang.org/pipermail/erlang-questions/2005-November/017805.html">
 %% message</a> describing the basis of the JSON data type mapping that
 %% this module uses
 %%
@@ -94,7 +94,7 @@
 -export([unicode_decode/1, unicode_encode/1]).
 -export([from_record/3, to_record/3]).
 -export([hex_digit/1, digit_hex/1]).
--export([get_field/2, get_field/3, set_field/3]).
+-export([get_field/2, get_field/3, set_field/3, exclude_field/2]).
 -export([equiv/2]).
 
 %% @spec () -> string()
@@ -357,7 +357,7 @@ parse_codepoint([$" | Rest]) -> %% " emacs balancing
     {done, Rest};
 parse_codepoint([$\\, Key | Rest]) ->
     parse_general_char(Key, Rest);
-parse_codepoint([X | Rest]) ->					   
+parse_codepoint([X | Rest]) ->
     {ok, X, Rest}.
 
 parse_general_char($b, Rest) -> {ok, 8, Rest};
@@ -525,6 +525,11 @@ decode_record_fields(Values, Fallback, Index, [Field | Rest]) ->
 	 false ->
 	     element(Index, Fallback)
      end | decode_record_fields(Values, Fallback, Index + 1, Rest)].
+
+%% @spec (JsonObject::jsonobj(), atom()) -> jsonobj()
+%% @doc Exclude a named field from a JSON "object".
+exclude_field({obj, Props}, Key) ->
+    {obj, lists:keydelete(Key, 1, Props)}.
 
 %% @spec (JsonObject::jsonobj(), atom()) -> {ok, json()} | not_found
 %% @doc Retrieves the value of a named field of a JSON "object".

@@ -2,7 +2,7 @@
 %%---------------------------------------------------------------------------
 %% @author Tony Garnock-Jones <tonygarnockjones@gmail.com>
 %% @author LShift Ltd. <query@lshift.net>
-%% @copyright 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.
+%% @copyright 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.
 %% @license
 %%
 %% Permission is hereby granted, free of charge, to any person
@@ -88,13 +88,17 @@
 -module(rfc4627_jsonrpc_inets).
 -include("rfc4627_jsonrpc.hrl").
 
-%% The path to httpd.hrl has changed in OTP R14A and newer. Our
-%% Makefile detects the change for us, and supplies a compile-time
-%% macro definition to allow us to adapt to the new path.
--ifdef(new_inets).
--include_lib("inets/include/httpd.hrl").
--else.
+%% The path to httpd.hrl has changed with various OTP releases. Our
+%% Makefile detects the changes for us, and supplies compile-time
+%% macro definitions to allow us to adapt.
+-ifdef(inets_pre_r14a).
 -include_lib("inets/src/httpd.hrl").
+-else.
+-ifdef(inets_pre_r14b01).
+-include_lib("inets/src/http_server/httpd.hrl").
+-else.
+-include_lib("inets/include/httpd.hrl").
+-endif.
 -endif.
 
 -export([do/1, load/2]).

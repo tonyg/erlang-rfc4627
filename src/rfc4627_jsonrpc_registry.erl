@@ -2,7 +2,7 @@
 %%---------------------------------------------------------------------------
 %% @author Tony Garnock-Jones <tonygarnockjones@gmail.com>
 %% @author LShift Ltd. <query@lshift.net>
-%% @copyright 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.
+%% @copyright 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.
 %% @license
 %%
 %% Permission is hereby granted, free of charge, to any person
@@ -53,7 +53,7 @@ terminate(_Reason, _State) ->
 
 %% @doc gen_server behaviour callback.
 code_change(_OldVsn, State, _Extra) ->
-    State.
+    {ok, State}.
 
 %% @doc gen_server behaviour callback.
 handle_call({lookup_service, Service}, _From, State) ->
@@ -85,7 +85,7 @@ handle_info({'DOWN', _MonitorRef, process, DownPid, _Reason}, State) ->
     case ets:lookup(?TABLE_NAME, {service_pid, DownPid}) of
         [] ->
             {noreply, State};
-        [ServiceName] ->
+        [{_, ServiceName}] ->
             ets:delete(?TABLE_NAME, {service_pid, DownPid}),
             ets:delete(?TABLE_NAME, {service, ServiceName}),
             {noreply, State}

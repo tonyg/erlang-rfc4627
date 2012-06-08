@@ -70,8 +70,10 @@ Object.extend(JsonRpcTransaction.prototype,
     addCallback: function(cb) {
 	this.callbacks.push(cb);
 	if (this.replyReady) {
-	    try { cb(this.reply, false); }
-	    catch (err) {}
+	    setTimeout(function () {
+		try { cb(this.reply, false); }
+		catch (err) {}
+	    }, 0);
 	}
 	return this;
     },
@@ -79,8 +81,10 @@ Object.extend(JsonRpcTransaction.prototype,
     addErrorCallback: function(cb) {
 	this.errorCallbacks.push(cb);
 	if (this.error) {
-	    try { cb(this.error, true); }
-	    catch (err) {}
+	    setTimeout(function () {
+		try { cb(this.error, true); }
+		catch (err) {}
+	    }, 0);
 	}
 	return this;
     }

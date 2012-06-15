@@ -32,6 +32,13 @@ See
 to learn how to delegate incoming Mochiweb HTTP requests to the
 JSON-RPC service dispatcher.
 
+### Using Cowboy
+
+See
+[rfc4627\_jsonrpc\_cowboy.erl](http://tonyg.github.com/erlang-rfc4627/doc/rfc4627_jsonrpc_cowboy.html)
+to learn how to delegate incoming Cowboy HTTP requests to the
+JSON-RPC service dispatcher.
+
 ## Running the example test service that comes with the source code
 
 Included with the Erlang RFC4627 source code is a small Inets-based
@@ -88,6 +95,7 @@ contributions from others:
  - Eugene Volchek
  - Simon MacMullen
  - Andrey Khozov
+ - Erik Timan
 
 ## Copyright and Licence
 

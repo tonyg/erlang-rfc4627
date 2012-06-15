@@ -9,6 +9,7 @@
     rfc4627_jsonrpc_http,
     rfc4627_jsonrpc_inets,
     rfc4627_jsonrpc_mochiweb,
+    rfc4627_jsonrpc_cowboy,
     rfc4627_jsonrpc_registry
   ]},
   {registered, []},

@@ -1,7 +1,7 @@
 @title RFC4627 (JSON) and JSON-RPC for Erlang
 @author Tony Garnock-Jones <tonyg@lshift.net>
 @author LShift Ltd. <query@lshift.net>
-@copyright 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.
+@copyright 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.
 
 @version HEAD
 

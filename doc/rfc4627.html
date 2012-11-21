@@ -1,6 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Module rfc4627</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
@@ -10,13 +11,13 @@
 
 <h1>Module rfc4627</h1>
 <ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>An implementation of RFC 4627 (JSON, the JavaScript Object Notation) for Erlang.
-<p>Copyright © 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.</p>
+<p>Copyright © 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.</p>
 
 <p><b>Authors:</b> Tony Garnock-Jones (<a href="mailto:tonygarnockjones@gmail.com"><tt>tonygarnockjones@gmail.com</tt></a>), LShift Ltd. (<a href="mailto:query@lshift.net"><tt>query@lshift.net</tt></a>).</p>
 <p><b>References</b><ul><li><a href="http://www.ietf.org/rfc/rfc4627.txt">RFC
   4627</a>, the JSON RFC
  </li><li><a href="http://www.json.org/">JSON in general</a>
- </li><li>Joe Armstrong's <a href="http://www.erlang.org/ml-archive/erlang-questions/200511/msg00193.html">
+ </li><li>Joe Armstrong's <a href="http://erlang.org/pipermail/erlang-questions/2005-November/017805.html">
   message</a> describing the basis of the JSON data type mapping that
   this module uses
  </li></ul></p>
@@ -104,6 +105,7 @@ codepoints, and then into UTF-8.</td></tr>
 <tr><td valign="top"><a href="#encode_noauto-2">encode_noauto/2</a></td><td>As <a href="#encode_noauto-1"><code>encode_noauto/1</code></a>, but prepends <i>reversed</i> text
   to the supplied accumulator string.</td></tr>
 <tr><td valign="top"><a href="#equiv-2">equiv/2</a></td><td>Tests equivalence of JSON terms.</td></tr>
+<tr><td valign="top"><a href="#exclude_field-2">exclude_field/2</a></td><td>Exclude a named field from a JSON "object".</td></tr>
 <tr><td valign="top"><a href="#from_record-3">from_record/3</a></td><td>Used by the <code>?RFC4627_FROM_RECORD</code> macro in <code>rfc4627.hrl</code>.</td></tr>
 <tr><td valign="top"><a href="#get_field-2">get_field/2</a></td><td>Retrieves the value of a named field of a JSON "object".</td></tr>
 <tr><td valign="top"><a href="#get_field-3">get_field/3</a></td><td>Retrieves the value of a named field of a JSON "object", or a
@@ -120,10 +122,8 @@ codepoints, and then into UTF-8.</td></tr>
 
 <h3 class="function"><a name="decode-1">decode/1</a></h3>
 <div class="spec">
-<p><tt>decode(Input::binary() | [<a href="#type-byte">byte()</a>]) -&gt; {ok, <a href="#type-json">json()</a>, Remainder} | {error, Reason}</tt>
-<ul class="definitions"><li><tt>Remainder = string()</tt></li>
-<li><tt>Reason = any()</tt></li>
-</ul></p>
+<p><tt>decode(Input::binary() | [byte()]) -&gt; {ok, <a href="#type-json">json()</a>, Remainder} | {error, Reason}</tt>
+<ul class="definitions"><li><tt>Remainder = string()</tt></li><li><tt>Reason = any()</tt></li></ul></p>
 </div><p><p>Decodes a JSON value from an input binary or string of  
 Unicode-encoded text.</p>
  
@@ -140,7 +140,7 @@ codepoints.</p>
 
 <h3 class="function"><a name="decode_noauto-1">decode_noauto/1</a></h3>
 <div class="spec">
-<p><tt>decode_noauto(Input::string()) -&gt; {ok, <a href="#type-json">json()</a>, string()} | {error, any()}</tt></p>
+<p><tt>decode_noauto(Input::string()) -&gt; {ok, <a href="#type-json">json()</a>, string()} | {error, any()}</tt><br></p>
 </div><p><p>As <a href="#decode-1"><code>decode/1</code></a>, but does not perform Unicode decoding on its input.</p>
  
   Expects a list of codepoints - an ordinary Erlang string - rather
@@ -148,7 +148,7 @@ codepoints.</p>
 
 <h3 class="function"><a name="digit_hex-1">digit_hex/1</a></h3>
 <div class="spec">
-<p><tt>digit_hex(Hexchar::char()) -&gt; integer()</tt></p>
+<p><tt>digit_hex(Hexchar::char()) -&gt; integer()</tt><br></p>
 </div><p><p>Returns the number corresponding to Hexchar.</p>
  
   Hexchar must be one of the characters <code>$0</code> through <code>$9</code>, <code>$A</code>
@@ -156,7 +156,7 @@ codepoints.</p>
 
 <h3 class="function"><a name="encode-1">encode/1</a></h3>
 <div class="spec">
-<p><tt>encode(X::<a href="#type-json">json()</a>) -&gt; [<a href="#type-byte">byte()</a>]</tt></p>
+<p><tt>encode(X::<a href="#type-json">json()</a>) -&gt; [byte()]</tt><br></p>
 </div><p><p>Encodes the JSON value supplied, first into Unicode  
 codepoints, and then into UTF-8.</p>
  
@@ -169,7 +169,7 @@ interpreted as UTF-8 encoded text.</p>
 
 <h3 class="function"><a name="encode_noauto-1">encode_noauto/1</a></h3>
 <div class="spec">
-<p><tt>encode_noauto(X::<a href="#type-json">json()</a>) -&gt; string()</tt></p>
+<p><tt>encode_noauto(X::<a href="#type-json">json()</a>) -&gt; string()</tt><br></p>
 </div><p><p>Encodes the JSON value supplied into raw Unicode codepoints.</p>
  
   <p>The resulting string may contain codepoints with value &gt;=128. You
@@ -182,22 +182,26 @@ that's appropriate for your application.</p>
 
 <h3 class="function"><a name="encode_noauto-2">encode_noauto/2</a></h3>
 <div class="spec">
-<p><tt>encode_noauto(Str::<a href="#type-json">json()</a>, Acc::string()) -&gt; string()</tt></p>
+<p><tt>encode_noauto(Str::<a href="#type-json">json()</a>, Acc::string()) -&gt; string()</tt><br></p>
 </div><p>As <a href="#encode_noauto-1"><code>encode_noauto/1</code></a>, but prepends <i>reversed</i> text
   to the supplied accumulator string.</p>
 
 <h3 class="function"><a name="equiv-2">equiv/2</a></h3>
 <div class="spec">
-<p><tt>equiv(A::<a href="#type-json">json()</a>, B::<a href="#type-json">json()</a>) -&gt; bool()</tt></p>
+<p><tt>equiv(A::<a href="#type-json">json()</a>, B::<a href="#type-json">json()</a>) -&gt; bool()</tt><br></p>
 </div><p><p>Tests equivalence of JSON terms.</p>
  
   After Bob Ippolito's <code>equiv</code> predicate in mochijson.</p>
 
+<h3 class="function"><a name="exclude_field-2">exclude_field/2</a></h3>
+<div class="spec">
+<p><tt>exclude_field(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, Key::atom()) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt><br></p>
+</div><p>Exclude a named field from a JSON "object".</p>
+
 <h3 class="function"><a name="from_record-3">from_record/3</a></h3>
 <div class="spec">
 <p><tt>from_record(R::Record, RecordName::atom(), Fields::[any()]) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt>
-<ul class="definitions"><li><tt>Record = tuple()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Record = tuple()</tt></li></ul></p>
 </div><p><p>Used by the <code>?RFC4627_FROM_RECORD</code> macro in <code>rfc4627.hrl</code>.</p>
  
   Given a record type definiton of <code>-record(myrecord, {field1,
@@ -208,30 +212,30 @@ that's appropriate for your application.</p>
 
 <h3 class="function"><a name="get_field-2">get_field/2</a></h3>
 <div class="spec">
-<p><tt>get_field(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, Key::atom()) -&gt; {ok, <a href="#type-json">json()</a>} | not_found</tt></p>
+<p><tt>get_field(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, Key::atom()) -&gt; {ok, <a href="#type-json">json()</a>} | not_found</tt><br></p>
 </div><p>Retrieves the value of a named field of a JSON "object".</p>
 
 <h3 class="function"><a name="get_field-3">get_field/3</a></h3>
 <div class="spec">
-<p><tt>get_field(Obj::<a href="#type-jsonobj">jsonobj()</a>, Key::atom(), DefaultValue::<a href="#type-json">json()</a>) -&gt; <a href="#type-json">json()</a></tt></p>
+<p><tt>get_field(Obj::<a href="#type-jsonobj">jsonobj()</a>, Key::atom(), DefaultValue::<a href="#type-json">json()</a>) -&gt; <a href="#type-json">json()</a></tt><br></p>
 </div><p>Retrieves the value of a named field of a JSON "object", or a
   default value if no such field is present.</p>
 
 <h3 class="function"><a name="hex_digit-1">hex_digit/1</a></h3>
 <div class="spec">
-<p><tt>hex_digit(Nibble::integer()) -&gt; char()</tt></p>
+<p><tt>hex_digit(Nibble::integer()) -&gt; char()</tt><br></p>
 </div><p><p>Returns the character code corresponding to Nibble.</p>
  
-  Nibble must be &gt;=0 and =&lt;16.</p>
+  Nibble must be &gt;=0 and =&lt;15.</p>
 
 <h3 class="function"><a name="mime_type-0">mime_type/0</a></h3>
 <div class="spec">
-<p><tt>mime_type() -&gt; string()</tt></p>
+<p><tt>mime_type() -&gt; string()</tt><br></p>
 </div><p>Returns the IANA-registered MIME type for JSON data.</p>
 
 <h3 class="function"><a name="set_field-3">set_field/3</a></h3>
 <div class="spec">
-<p><tt>set_field(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, Key::atom(), NewValue::<a href="#type-json">json()</a>) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt></p>
+<p><tt>set_field(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, Key::atom(), NewValue::<a href="#type-json">json()</a>) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt><br></p>
 </div><p><p>Adds or replaces a named field with the given value.</p>
  
   Returns a JSON "object" that contains the new field value as well
@@ -240,8 +244,7 @@ that's appropriate for your application.</p>
 <h3 class="function"><a name="to_record-3">to_record/3</a></h3>
 <div class="spec">
 <p><tt>to_record(JsonObject::<a href="#type-jsonobj">jsonobj()</a>, DefaultValue::Record, Fields::[atom()]) -&gt; Record</tt>
-<ul class="definitions"><li><tt>Record = tuple()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Record = tuple()</tt></li></ul></p>
 </div><p><p>Used by the <code>?RFC4627_TO_RECORD</code> macro in <code>rfc4627.hrl</code>.</p>
  
   Given a record type definiton of <code>-record(myrecord, {field1,
@@ -252,7 +255,7 @@ that's appropriate for your application.</p>
 
 <h3 class="function"><a name="unicode_decode-1">unicode_decode/1</a></h3>
 <div class="spec">
-<p><tt>unicode_decode(C::[<a href="#type-byte">byte()</a>]) -&gt; [char()]</tt></p>
+<p><tt>unicode_decode(C::[byte()]) -&gt; [char()]</tt><br></p>
 </div><p><p>Autodetects and decodes using the Unicode encoding of its input.</p>
  
   <p>From RFC4627, section 3, "Encoding":</p>
@@ -290,9 +293,8 @@ not the same as UCS-2!</p>
 
 <h3 class="function"><a name="unicode_encode-1">unicode_encode/1</a></h3>
 <div class="spec">
-<p><tt>unicode_encode(EncodingAndCharacters::{Encoding, [char()]}) -&gt; [<a href="#type-byte">byte()</a>]</tt>
-<ul class="definitions"><li><tt>Encoding = 'utf-32' | 'utf-32be' | 'utf-32le' | 'utf-16' | 'utf-16be' | 'utf-16le' | 'utf-8'</tt></li>
-</ul></p>
+<p><tt>unicode_encode(EncodingAndCharacters::{Encoding, [char()]}) -&gt; [byte()]</tt>
+<ul class="definitions"><li><tt>Encoding = 'utf-32' | 'utf-32be' | 'utf-32le' | 'utf-16' | 'utf-16be' | 'utf-16le' | 'utf-8'</tt></li></ul></p>
 </div><p><p>Encodes the given characters to bytes, using the given Unicode encoding.</p>
  
   For convenience, we supply a partial inverse of unicode_decode; If
@@ -302,6 +304,6 @@ not the same as UCS-2!</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Jul 16 2010, 16:11:08.</i></p>
+<p><i>Generated by EDoc, Nov 21 2012, 14:44:22.</i></p>
 </body>
 </html>

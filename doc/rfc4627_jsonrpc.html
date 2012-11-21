@@ -1,6 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Module rfc4627_jsonrpc</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
@@ -12,7 +13,7 @@
 <ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Provides a registry of running JSON-RPC objects, and a  
 transport-neutral means of invoking methods defined on such  
 objects.
-<p>Copyright © 2007-2010 Tony Garnock-Jones and 2007-2010 LShift Ltd.</p>
+<p>Copyright © 2007-2010, 2011, 2012 Tony Garnock-Jones and 2007-2010 LShift Ltd.</p>
 
 <p><b>Introduced in:</b> 1.2.0
  </p>
@@ -144,11 +145,6 @@ message could be used; or if the service didn't need an
 implementing process at all, the function object could process  
 the request without sending any messages at all.</p>
  
-  <p>At the moment, the <code>rfc4627_jsonrpc</code> service registry
-  only allows registration of <code>gen_server</code>-based  
-pid-style services; this restriction will be lifted in a future  
-release.</p>
- 
   <p>To build a service descriptor object with a function handler
   instead of a pid, call <code>rfc4627_jsonrpc:service/5</code>
   instead of <code>rfc4627_jsonrpc:service/4</code>:</p>
@@ -158,7 +154,7 @@ release.</p>
  
   my_handler(ProcedureNameBin, RequestInfo, Args) -&gt; jsonrpc_response()</pre>
  
-  The resulting service descriptor can be used directly with <a href="#invoke_service_method-8"><code>invoke_service_method/8</code></a>.
+  The resulting service descriptor can be registered with <a href="#register_service-1"><code>register_service/1</code></a> as well as used directly with <a href="#invoke_service_method-8"><code>invoke_service_method/8</code></a>.
  
 <h2><a name="types">Data Types</a></h2>
 
@@ -213,6 +209,7 @@ specification.</p>
 <tr><td valign="top"><a href="#jsonrpc_post-4">jsonrpc_post/4</a></td><td>Performs a POST-style invocation of a JSON-RPC service method.</td></tr>
 <tr><td valign="top"><a href="#lookup_service-1">lookup_service/1</a></td><td>Calls the registry to look up a service by name.</td></tr>
 <tr><td valign="top"><a href="#proc-2">proc/2</a></td><td>Constructs a service procedure description record.</td></tr>
+<tr><td valign="top"><a href="#register_service-1">register_service/1</a></td><td>Registers a JSON-RPC service.</td></tr>
 <tr><td valign="top"><a href="#register_service-2">register_service/2</a></td><td>Registers a JSON-RPC service.</td></tr>
 <tr><td valign="top"><a href="#service-4">service/4</a></td><td>Constructs a service description record.</td></tr>
 <tr><td valign="top"><a href="#service-5">service/5</a></td><td>As for <a href="#service-4"><code>service/4</code></a>, but supplying a handler for use with
@@ -226,7 +223,7 @@ specification.</p>
 
 <h3 class="function"><a name="error_response-2">error_response/2</a></h3>
 <div class="spec">
-<p><tt>error_response(CodeOrMessage::integer() | string() | binary(), ErrorValue::<a href="#type-json">json()</a>) -&gt; {error, <a href="#type-jsonobj">jsonobj()</a>}</tt></p>
+<p><tt>error_response(CodeOrMessage::integer() | string() | binary(), ErrorValue::<a href="#type-json">json()</a>) -&gt; {error, <a href="#type-jsonobj">jsonobj()</a>}</tt><br></p>
 </div><p><p>Constructs an error response as per the JSON-RPC specification.</p>
  
   Either a code or a message can be supplied as the first argument.
@@ -235,7 +232,7 @@ specification.</p>
 
 <h3 class="function"><a name="error_response-3">error_response/3</a></h3>
 <div class="spec">
-<p><tt>error_response(Code::integer(), Message::string() | binary(), ErrorValue::<a href="#type-json">json()</a>) -&gt; {error, <a href="#type-jsonobj">jsonobj()</a>}</tt></p>
+<p><tt>error_response(Code::integer(), Message::string() | binary(), ErrorValue::<a href="#type-json">json()</a>) -&gt; {error, <a href="#type-jsonobj">jsonobj()</a>}</tt><br></p>
 </div><p><p>Constructs an error response as per the JSON-RPC specification.</p>
  
   <p>The first argument should hold the error code. Error codes are  
@@ -254,21 +251,13 @@ describing the error as text.</p>
 
 <h3 class="function"><a name="gen_object_name-0">gen_object_name/0</a></h3>
 <div class="spec">
-<p><tt>gen_object_name() -&gt; string()</tt></p>
+<p><tt>gen_object_name() -&gt; string()</tt><br></p>
 </div><p>Generates a unique name that can be used for otherwise unnamed JSON-RPC services.</p>
 
 <h3 class="function"><a name="invoke_service_method-8">invoke_service_method/8</a></h3>
 <div class="spec">
 <p><tt>invoke_service_method(ServiceRec, RequestId, PostOrGet, RequestInfo, EndpointAddress, Method, Args, Timeout) -&gt; <a href="#type-jsonrpc_response">jsonrpc_response()</a></tt>
-<ul class="definitions"><li><tt>ServiceRec = <a href="#type-service">service()</a></tt></li>
-<li><tt>RequestId = integer() | null</tt></li>
-<li><tt>PostOrGet = post | get</tt></li>
-<li><tt>RequestInfo = <a href="#type-jsonobj">jsonobj()</a></tt></li>
-<li><tt>EndpointAddress = binary() | undefined</tt></li>
-<li><tt>Method = binary()</tt></li>
-<li><tt>Args = <a href="#type-jsonobj">jsonobj()</a> | <a href="#type-jsonarray">jsonarray()</a></tt></li>
-<li><tt>Timeout = default | infinity | integer()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>ServiceRec = <a href="#type-service">service()</a></tt></li><li><tt>RequestId = integer() | null</tt></li><li><tt>PostOrGet = post | get</tt></li><li><tt>RequestInfo = <a href="#type-jsonobj">jsonobj()</a></tt></li><li><tt>EndpointAddress = binary() | undefined</tt></li><li><tt>Method = binary()</tt></li><li><tt>Args = <a href="#type-jsonobj">jsonobj()</a> | <a href="#type-jsonarray">jsonarray()</a></tt></li><li><tt>Timeout = default | infinity | integer()</tt></li></ul></p>
 </div><p><p>Calls a method defined on a JSON-RPC service.</p>
  
   <p>Use <a href="#lookup_service-1"><code>lookup_service/1</code></a> or <a href="#service-5"><code>service/5</code></a> to get a usable  
@@ -309,14 +298,13 @@ for the call.</p>
 
 <h3 class="function"><a name="jsonrpc_post-3">jsonrpc_post/3</a></h3>
 <div class="spec">
-<p><tt>jsonrpc_post(ServiceRec::<a href="#type-service">service()</a>, RequestInfo::<a href="#type-jsonobj">jsonobj()</a>, RequestObj::<a href="#type-jsonobj">jsonobj()</a>) -&gt; <a href="#type-jsonrpc_response">jsonrpc_response()</a></tt></p>
+<p><tt>jsonrpc_post(ServiceRec::<a href="#type-service">service()</a>, RequestInfo::<a href="#type-jsonobj">jsonobj()</a>, RequestObj::<a href="#type-jsonobj">jsonobj()</a>) -&gt; <a href="#type-jsonrpc_response">jsonrpc_response()</a></tt><br></p>
 </div><p>Calls <a href="#jsonrpc_post-4"><code>jsonrpc_post/4</code></a> with a <code>Timeout</code> of <code>default</code>.</p>
 
 <h3 class="function"><a name="jsonrpc_post-4">jsonrpc_post/4</a></h3>
 <div class="spec">
 <p><tt>jsonrpc_post(ServiceRec::<a href="#type-service">service()</a>, RequestInfo::<a href="#type-jsonobj">jsonobj()</a>, RequestObj::<a href="#type-jsonobj">jsonobj()</a>, Timeout) -&gt; <a href="#type-jsonrpc_response">jsonrpc_response()</a></tt>
-<ul class="definitions"><li><tt>Timeout = default | infinity | integer()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Timeout = default | infinity | integer()</tt></li></ul></p>
 </div><p><p>Performs a POST-style invocation of a JSON-RPC service method.</p>
  
   <p><code>RequestObj</code> is to be a JSON "object" containing at minimum fields  
@@ -328,21 +316,25 @@ JSON-RPC specification.</p>
 
 <h3 class="function"><a name="lookup_service-1">lookup_service/1</a></h3>
 <div class="spec">
-<p><tt>lookup_service(Service::binary()) -&gt; not_found | <a href="#type-service">service()</a></tt></p>
+<p><tt>lookup_service(Service::binary()) -&gt; not_found | <a href="#type-service">service()</a></tt><br></p>
 </div><p>Calls the registry to look up a service by name.</p>
 
 <h3 class="function"><a name="proc-2">proc/2</a></h3>
 <div class="spec">
 <p><tt>proc(Name, Params::[Parameter]) -&gt; #service_proc{}</tt>
-<ul class="definitions"><li><tt>Name = binary() | string()</tt></li>
-<li><tt>Parameter = {Name, ParameterType} | #service_proc_param{}</tt></li>
-<li><tt>ParameterType = bit | num | str | arr | obj | any | nil | string() | binary()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Name = binary() | string()</tt></li><li><tt>Parameter = {Name, ParameterType} | #service_proc_param{}</tt></li><li><tt>ParameterType = bit | num | str | arr | obj | any | nil | string() | binary()</tt></li></ul></p>
 </div><p>Constructs a service procedure description record.</p>
+
+<h3 class="function"><a name="register_service-1">register_service/1</a></h3>
+<div class="spec">
+<p><tt>register_service(ServiceDescription::<a href="#type-service">service()</a>) -&gt; ok</tt><br></p>
+</div><p><p>Registers a JSON-RPC service.</p>
+ 
+  The name of the service is contained within its service record.</p>
 
 <h3 class="function"><a name="register_service-2">register_service/2</a></h3>
 <div class="spec">
-<p><tt>register_service(Pid::pid(), ServiceDescription::<a href="#type-service">service()</a>) -&gt; ok</tt></p>
+<p><tt>register_service(Pid::pid(), ServiceDescription::<a href="#type-service">service()</a>) -&gt; ok</tt><br></p>
 </div><p><p>Registers a JSON-RPC service.</p>
  
   The name of the service is contained within its service record.</p>
@@ -350,14 +342,7 @@ JSON-RPC specification.</p>
 <h3 class="function"><a name="service-4">service/4</a></h3>
 <div class="spec">
 <p><tt>service(Name, Id, Version, Procs) -&gt; <a href="#type-service">service()</a></tt>
-<ul class="definitions"><li><tt>Name = binary() | string()</tt></li>
-<li><tt>Id = binary() | string()</tt></li>
-<li><tt>Version = binary() | string()</tt></li>
-<li><tt>Procs = [ProcedureDescription]</tt></li>
-<li><tt>ProcedureDescription = {Name, [Parameter]} | #service_proc{}</tt></li>
-<li><tt>Parameter = {Name, ParameterType} | #service_proc_param{}</tt></li>
-<li><tt>ParameterType = bit | num | str | arr | obj | any | nil | string() | binary()</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Name = binary() | string()</tt></li><li><tt>Id = binary() | string()</tt></li><li><tt>Version = binary() | string()</tt></li><li><tt>Procs = [ProcedureDescription]</tt></li><li><tt>ProcedureDescription = {Name, [Parameter]} | #service_proc{}</tt></li><li><tt>Parameter = {Name, ParameterType} | #service_proc_param{}</tt></li><li><tt>ParameterType = bit | num | str | arr | obj | any | nil | string() | binary()</tt></li></ul></p>
 </div><p><p>Constructs a service description record.</p>
  
   The <code>Procs</code> parameter should be a list of procedure-descriptions,
@@ -366,24 +351,23 @@ JSON-RPC specification.</p>
 <h3 class="function"><a name="service-5">service/5</a></h3>
 <div class="spec">
 <p><tt>service(Handler, Name, Id, Version, Procs) -&gt; <a href="#type-service">service()</a></tt>
-<ul class="definitions"><li><tt>Handler = {pid, pid()} | {function, function()}</tt></li>
-</ul></p>
+<ul class="definitions"><li><tt>Handler = {pid, pid()} | {function, function()}</tt></li></ul></p>
 </div><p>As for <a href="#service-4"><code>service/4</code></a>, but supplying a handler for use with
   an experimental "stateless" service implementation.</p>
 
 <h3 class="function"><a name="start-0">start/0</a></h3>
 <div class="spec">
-<p><tt>start() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt></p>
+<p><tt>start() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt><br></p>
 </div><p>Starts the registry process.</p>
 
 <h3 class="function"><a name="start_link-0">start_link/0</a></h3>
 <div class="spec">
-<p><tt>start_link() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt></p>
+<p><tt>start_link() -&gt; {ok, pid()} | {error, {already_started, pid()}}</tt><br></p>
 </div><p>Starts the registry process, linking it to the calling process.</p>
 
 <h3 class="function"><a name="system_describe-2">system_describe/2</a></h3>
 <div class="spec">
-<p><tt>system_describe(EndpointAddress::binary(), Service::<a href="#type-service">service()</a>) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt></p>
+<p><tt>system_describe(EndpointAddress::binary(), Service::<a href="#type-service">service()</a>) -&gt; <a href="#type-jsonobj">jsonobj()</a></tt><br></p>
 </div><p><p>Builds a JSON-RPC service description JSON object.</p>
  
   <p>This is used in the implementation of the <code>system.describe</code>  
@@ -397,6 +381,6 @@ specification to support.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Jul 16 2010, 16:11:08.</i></p>
+<p><i>Generated by EDoc, Nov 21 2012, 14:44:22.</i></p>
 </body>
 </html>

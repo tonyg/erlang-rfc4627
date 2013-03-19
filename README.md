@@ -39,6 +39,16 @@ See
 to learn how to delegate incoming Cowboy HTTP requests to the
 JSON-RPC service dispatcher.
 
+### Specifying as rebar dependency
+
+To specify erlang-rfc4627 as dependency in your rebar config please use like below
+
+```erlang
+{deps, [
+        {'erlang-rfc4627', ".*", {git, "git://github.com/tonyg/erlang-rfc4627.git", "master"}}
+]}.
+```
+
 ## Running the example test service that comes with the source code
 
 Included with the Erlang RFC4627 source code is a small Inets-based

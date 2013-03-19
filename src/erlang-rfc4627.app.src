@@ -1,4 +1,4 @@
-{application, erlang_rfc4627,
+{application, 'erlang-rfc4627',
  [{description, "RFC4627 for erlang"},
   {vsn, "1.1.1"},
   {modules, []},

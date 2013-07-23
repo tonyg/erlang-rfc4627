@@ -89,6 +89,17 @@
 
 -module(rfc4627).
 
+-ifdef(use_specs).
+-type json() :: jsonobj() | jsonarray() | jsonnum() | jsonstr() | true | false | null.
+-type jsonobj() :: {obj, [{jsonkey(), json()}]}.
+-type jsonkey() :: string().
+-type jsonarray() :: [json()].
+-type jsonnum() :: integer() | float().
+-type jsonstr() :: binary().
+
+-export_type([json/0,jsonobj/0,jsonkey/0,jsonarray/0,jsonnum/0,jsonstr/0]).
+-endif. % use_specs
+
 -export([mime_type/0, encode/1, decode/1]).
 -export([encode_noauto/1, encode_noauto/2, decode_noauto/1]).
 -export([unicode_decode/1, unicode_encode/1]).

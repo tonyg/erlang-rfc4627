@@ -5,7 +5,7 @@ INCLUDE_DIR=include
 INCLUDES=$(wildcard $(INCLUDE_DIR)/*.hrl)
 SOURCES=$(wildcard $(SOURCE_DIR)/*.erl)
 TARGETS=$(patsubst $(SOURCE_DIR)/%.erl, $(EBIN_DIR)/%.beam,$(SOURCES))
-ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) $(INETS_DEF) -Wall +debug_info # +native -v
+ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) $(INETS_DEF) -Wall +debug_info $(if $(filter true,$(USE_SPECS)),-Duse_specs) # +native -v
 DIST_DIR=dist
 SIGNING_KEY_ID=F8D7D525
 VERSION=HEAD
@@ -28,6 +28,11 @@ else
 $(info Using path to INETS httpd.hrl that exists in releases at and after R14B01.)
 INETS_DEF=
 endif
+endif
+
+ifndef USE_SPECS
+# let use specs in sync with rabbitmq (starting from R15B)
+USE_SPECS:=$(shell erl -noshell -eval 'io:format([list_to_integer(X) || X <- string:tokens(erlang:system_info(version), ".")] >= [5,9]), halt().')
 endif
 
 all: $(TARGETS)

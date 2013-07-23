@@ -5,7 +5,7 @@ INCLUDE_DIR=include
 INCLUDES=$(wildcard $(INCLUDE_DIR)/*.hrl)
 SOURCES=$(wildcard $(SOURCE_DIR)/*.erl)
 TARGETS=$(patsubst $(SOURCE_DIR)/%.erl, $(EBIN_DIR)/%.beam,$(SOURCES))
-ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) $(INETS_DEF) -Wall +debug_info $(if $(filter true,$(USE_SPECS)),-Duse_specs) # +native -v
+ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) $(INETS_DEF) $(SPECS_DEF) -Wall +debug_info # +native -v
 DIST_DIR=dist
 SIGNING_KEY_ID=F8D7D525
 VERSION=HEAD
@@ -14,9 +14,11 @@ PACKAGE_NAME=rfc4627_jsonrpc
 ## The path to httpd.hrl changed at R14A, and then changed again
 ## between OTP R14B and R14B01. Detect the changes, and supply
 ## compile-time macro definitions to allow rfc4627_jsonrpc_inets.erl
-## to adapt to the new paths.
+## to adapt to the new paths. We also use this to decide whether
+## to use Dialyzer-compatible specs or not.
 ERLANG_OTP_RELEASE:=$(shell erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().')
 $(info Building for OTP release $(ERLANG_OTP_RELEASE).)
+
 ifeq ($(shell test R14A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
 $(info Using path to INETS httpd.hrl that existed before R14A.)
 INETS_DEF=-Dinets_pre_r14a
@@ -30,9 +32,12 @@ INETS_DEF=
 endif
 endif
 
-ifndef USE_SPECS
-# let use specs in sync with rabbitmq (starting from R15B)
-USE_SPECS:=$(shell erl -noshell -eval 'io:format([list_to_integer(X) || X <- string:tokens(erlang:system_info(version), ".")] >= [5,9]), halt().')
+ifeq ($(shell test R13A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)
+$(info Avoiding use of Dialyzer-compatible specs.)
+SPECS_DEF=
+else
+$(info Using Dialyzer-compatible specs.)
+SPECS_DEF=-Duse_specs
 endif
 
 all: $(TARGETS)

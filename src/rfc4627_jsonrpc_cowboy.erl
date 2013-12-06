@@ -83,7 +83,7 @@ handle(AliasPrefix, Req) ->
     QueryObj = {obj, [{binary_to_list(K), V} || {K,V} <- QSVals]},
     {Hdrs, _} = cowboy_req:headers(Req),
     HeaderObj = {obj, [{normalize(K), V} || {K,V} <- Hdrs]},
-    {PeerAddr, _} = cowboy_req:peer_addr(Req),
+    {{PeerAddr, _Port}, _} = cowboy_req:peer(Req),
     Peer = list_to_binary(inet_parse:ntoa(PeerAddr)),
     {Method, _} = cowboy_req:method(Req),
     RequestInfo = {obj, [{"http_method", Method},

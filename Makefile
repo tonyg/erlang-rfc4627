@@ -16,7 +16,11 @@ PACKAGE_NAME=rfc4627_jsonrpc
 ## compile-time macro definitions to allow rfc4627_jsonrpc_inets.erl
 ## to adapt to the new paths. We also use this to decide whether
 ## to use Dialyzer-compatible specs or not.
-ERLANG_OTP_RELEASE:=$(shell erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().')
+## (As of R17, the otp_release seems to lack a leading R!)
+ERLANG_OTP_RELEASE:=$(shell \
+	erl -noshell \
+	    -eval 'io:format(erlang:system_info(otp_release)), halt().' \
+	| awk '/^[^R]/{print "R"$$0}; /^R/{print $$0};')
 $(info Building for OTP release $(ERLANG_OTP_RELEASE).)
 
 ifeq ($(shell test R14A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)

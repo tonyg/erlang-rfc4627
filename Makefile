@@ -18,9 +18,8 @@ PACKAGE_NAME=rfc4627_jsonrpc
 ## to use Dialyzer-compatible specs or not.
 ## (As of R17, the otp_release seems to lack a leading R!)
 ERLANG_OTP_RELEASE:=$(shell \
-	erl -noshell \
-	    -eval 'io:format(erlang:system_info(otp_release)), halt().' \
-	| awk '/^[^R]/{print "R"$$0}; /^R/{print $$0};')
+  erl -noshell -eval \
+  'io:format(case erlang:system_info(otp_release) of [$$R|X]->[$$R|X]; X->[$$R|X] end), halt().')
 $(info Building for OTP release $(ERLANG_OTP_RELEASE).)
 
 ifeq ($(shell test R14A \> $(ERLANG_OTP_RELEASE) && echo yes),yes)

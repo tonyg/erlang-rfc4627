@@ -213,6 +213,7 @@
 -module(rfc4627_jsonrpc).
 -include("rfc4627.hrl").
 -include("rfc4627_jsonrpc.hrl").
+-compile(binary_comprehension).
 
 -export([start/0, start_link/0]).
 
@@ -474,12 +475,8 @@ proc_param_type(nil) -> <<"nil">>;
 proc_param_type(T) when is_list(T) -> list_to_binary(T);
 proc_param_type(T) when is_binary(T) -> T.
 
-binary_to_hex(<<>>) ->
-    [];
-binary_to_hex(<<B, Rest/binary>>) ->
-    [rfc4627:hex_digit((B bsr 4) band 15),
-     rfc4627:hex_digit(B band 15) |
-     binary_to_hex(Rest)].
+binary_to_hex(Bin) ->
+    [rfc4627:hex_digit(B) || <<B:4>> <= Bin].
 
 lookup_service_proc(#service{procs = Procs}, Method) ->
     case lists:keysearch(Method, #service_proc.name, Procs) of

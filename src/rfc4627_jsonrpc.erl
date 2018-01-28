@@ -255,7 +255,7 @@ register_service(Pid, ServiceDescription) ->
 %% @spec () -> string()
 %% @doc Generates a unique name that can be used for otherwise unnamed JSON-RPC services.
 gen_object_name() ->
-    Hash = erlang:md5(term_to_binary({node(), erlang:now()})),
+    Hash = erlang:md5(term_to_binary({node(), erlang:timestamp()})),
     binary_to_hex(Hash).
 
 %% @spec (binary(), Service::service()) -> jsonobj()

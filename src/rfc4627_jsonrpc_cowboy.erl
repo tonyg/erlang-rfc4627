@@ -77,21 +77,21 @@ normalize(X) when is_list(X) ->
 %% where `handle_non_jsonrpc_request' does the obvious thing for
 %% non-JSON-RPC requests.
 handle(AliasPrefix, Req) ->
-    {BinaryPath, _} = cowboy_http_req:raw_path(Req),
+    {BinaryPath, _} = cowboy_req:path(Req),
     Path = binary_to_list(BinaryPath),
-    {QSVals, _} = cowboy_http_req:qs_vals(Req),
+    {QSVals, _} = cowboy_req:qs_vals(Req),
     QueryObj = {obj, [{binary_to_list(K), V} || {K,V} <- QSVals]},
-    {Hdrs, _} = cowboy_http_req:headers(Req),
+    {Hdrs, _} = cowboy_req:headers(Req),
     HeaderObj = {obj, [{normalize(K), V} || {K,V} <- Hdrs]},
-    {PeerAddr, _} = cowboy_http_req:peer_addr(Req),
+    {{PeerAddr, _Port}, _} = cowboy_req:peer(Req),
     Peer = list_to_binary(inet_parse:ntoa(PeerAddr)),
-    {Method, _} = cowboy_http_req:method(Req),
-    RequestInfo = {obj, [{"http_method", list_to_binary(atom_to_list(Method))},
+    {Method, _} = cowboy_req:method(Req),
+    RequestInfo = {obj, [{"http_method", Method},
                          {"http_query_parameters", QueryObj},
                          {"http_headers", HeaderObj},
                          {"remote_peername", Peer},
                          {"scheme", <<"http">>}]},
-    {ok, Body, _} = cowboy_http_req:body(Req),
+    {ok, Body, _} = cowboy_req:body(Req),
 
     case rfc4627_jsonrpc_http:invoke_service_method(AliasPrefix,
                                                     Path,
@@ -106,8 +106,8 @@ handle(AliasPrefix, Req) ->
                 rfc4627:get_field(ResponseInfo, "http_status_code", 200),
             Headers = [{list_to_binary(K), V} || {K,V} <- ResponseHeaderFields],
             RespType = [{<<"Content-Type">>, rfc4627:mime_type()}],
-            cowboy_http_req:reply(StatusCode,
-                                  Headers ++ RespType,
-                                  ResultEnc,
-                                  Req)
+            cowboy_req:reply(StatusCode,
+                              Headers ++ RespType,
+                              ResultEnc,
+                              Req)
     end.
